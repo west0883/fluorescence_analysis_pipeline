@@ -123,6 +123,61 @@ parameters.loop_list.things_to_save.segmented_timeseries.level = 'stack';
 RunAnalysis({@SegmentTimeseriesData}, parameters);
 
 
+%% SPONTANEOUS-- Segment fluorescence by behavior period
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
+                   'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').spontaneous'}, 'stack_iterator';
+                   'period', {'loop_variables.periods_spontaneous{:}'}, 'period_iterator'};
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
+
+% Skip any files that don't exist (spontaneous or problem files)
+parameters.load_abort_flag = true; 
+
+% Dimension of different time range pairs.
+parameters.rangePairs = 1; 
+
+% 
+parameters.segmentDim = 1;
+parameters.concatDim = 3;
+
+% Input values. 
+% Extracted timeseries.
+parameters.loop_list.things_to_load.timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\timeseries\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.timeseries.filename= {'timeseries', 'stack', '.mat'};
+parameters.loop_list.things_to_load.timeseries.variable= {'timeseries'}; 
+parameters.loop_list.things_to_load.timeseries.level = 'stack';
+
+% Time ranges
+parameters.loop_list.things_to_load.time_ranges.dir = {[parameters.dir_exper 'behavior\spontaneous\segmented behavior periods\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.time_ranges.filename= {'behavior_periods_', 'stack', '.mat'};
+parameters.loop_list.things_to_load.time_ranges.variable= {'behavior_periods.', 'period'}; 
+parameters.loop_list.things_to_load.time_ranges.level = 'stack';
+
+% Output Values
+parameters.loop_list.things_to_save.segmented_timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\spontaneous\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_save.segmented_timeseries.filename= {'segmented_timeseries_', 'stack', '.mat'};
+parameters.loop_list.things_to_save.segmented_timeseries.variable= {'segmented_timeseries.', 'period'}; 
+parameters.loop_list.things_to_save.segmented_timeseries.level = 'stack';
+
+RunAnalysis({@SegmentTimeseriesData}, parameters);
+
+
+%% [FROM HERE DOWN YOU CAN COMBINE MOTORIZED & SPONTANOUS SECTIONS BECAUSE THEY 
+% SHARE FOLDER & FILE STRUCTURES. (put period lists in different elements of a
+% structure with condition_iterator saying where to find it, like you do with 
+% days/stacks of mice with mice_all)
+% Just need to make spontaneous the cell format, too. 
+
+
 %% Concatenate fluorescence by behavior per mouse 
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
@@ -289,6 +344,11 @@ parameters.loop_list.things_to_save.correlation.level = 'period';
 
 RunAnalysis({@CorrelateTimeseriesData}, parameters);
 
+%% Run Fischer z - transformation 
+% From here on, can run everything with a "transform" iterator -- "not
+% transformed" or "fischer transformed".
+
+
 %% Average rolled correlations
 
 % Always clear loop list first. 
@@ -423,64 +483,16 @@ RunAnalysis({@ReshapeData, @ConcatenateData}, parameters);
 
 %%  Run PCA ( not saving yet);
 
-[Zpca, U, mu, eigVecs] = PCA(correlations_concatenated',20);
-
-Zpca_reshaped = reshape(Zpca', 29,29, 20); 
-
-figure; for i = 1:20; subplot(4,5,i); imagesc(Zpca_reshaped(:,:,i)); caxis([-30 30]); colorbar; end;
-sgtitle('PCA');
+% [Zpca, U, mu, eigVecs] = PCA(correlations_concatenated',20);
+% 
+% Zpca_reshaped = reshape(Zpca', 29,29, 20); 
+% 
+% figure; for i = 1:20; subplot(4,5,i); imagesc(Zpca_reshaped(:,:,i)); caxis([-30 30]); colorbar; end;
+% sgtitle('PCA');
 
 %% *******************************************
 % ********* SPONTANEOUS DATA ANALYSIS ********
 % ********************************************
-
-%% SPONTANEOUS-- Segment fluorescence by behavior period
-
-% Always clear loop list first. 
-if isfield(parameters, 'loop_list')
-parameters = rmfield(parameters,'loop_list');
-end
-
-% Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
-               'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
-                   'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').spontaneous'}, 'stack_iterator';
-                   'period', {'loop_variables.periods_spontaneous{:}'}, 'period_iterator'};
-
-parameters.loop_variables.mice_all = parameters.mice_all;
-parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
-
-% Skip any files that don't exist (spontaneous or problem files)
-parameters.load_abort_flag = true; 
-
-% Dimension of different time range pairs.
-parameters.rangePairs = 1; 
-
-% 
-parameters.segmentDim = 1;
-parameters.concatDim = 3;
-
-% Input values. 
-% Extracted timeseries.
-parameters.loop_list.things_to_load.timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\timeseries\'], 'mouse', '\', 'day', '\'};
-parameters.loop_list.things_to_load.timeseries.filename= {'timeseries', 'stack', '.mat'};
-parameters.loop_list.things_to_load.timeseries.variable= {'timeseries'}; 
-parameters.loop_list.things_to_load.timeseries.level = 'stack';
-
-% Time ranges
-parameters.loop_list.things_to_load.time_ranges.dir = {[parameters.dir_exper 'behavior\spontaneous\segmented behavior periods\'], 'mouse', '\', 'day', '\'};
-parameters.loop_list.things_to_load.time_ranges.filename= {'behavior_periods_', 'stack', '.mat'};
-parameters.loop_list.things_to_load.time_ranges.variable= {'behavior_periods.', 'period'}; 
-parameters.loop_list.things_to_load.time_ranges.level = 'stack';
-
-% Output Values
-parameters.loop_list.things_to_save.segmented_timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\spontaneous\'], 'mouse', '\', 'day', '\'};
-parameters.loop_list.things_to_save.segmented_timeseries.filename= {'segmented_timeseries_', 'stack', '.mat'};
-parameters.loop_list.things_to_save.segmented_timeseries.variable= {'segmented_timeseries.', 'period'}; 
-parameters.loop_list.things_to_save.segmented_timeseries.level = 'stack';
-
-RunAnalysis({@SegmentTimeseriesData}, parameters);
-
 %% SPONTANEOUS-- Concatenate fluorescence by behavior per mouse 
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
@@ -714,13 +726,13 @@ parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'}};
 RunAnalysis({@ReshapeData, @ConcatenateData}, parameters); 
 
 %%  SPONTANEOUS-- Run PCA ( not saving yet);
-
-[Zpca, U, mu, eigVecs] = PCA(correlations_concatenated',20);
-
-Zpca_reshaped = reshape(Zpca', 29,29, 20); 
-
-figure; for i = 1:20; subplot(4,5,i); imagesc(Zpca_reshaped(:,:,i)); caxis([-30 30]); colorbar; end;
-sgtitle('PCA');
+% 
+% [Zpca, U, mu, eigVecs] = PCA(correlations_concatenated',20);
+% 
+% Zpca_reshaped = reshape(Zpca', 29,29, 20); 
+% 
+% figure; for i = 1:20; subplot(4,5,i); imagesc(Zpca_reshaped(:,:,i)); caxis([-30 30]); colorbar; end;
+% sgtitle('PCA');
 
 %% Visualize difference in mean continued rest & walk for motorized & spontaneous
 mouse ='1087';
@@ -833,8 +845,10 @@ RunAnalysis({@ConcatenateData}, parameters);
 % figure; imagesc(score(:,1:20)');
 % colorbar; caxis([-10 10]);
 
-%% Run PCA with RunAnalysis
-% [[Maybe use "reshape" as a trick to get only the indices you want, first]]
+
+%% (just 1 mouse for now) Run PCA with RunAnalysis -- both motorized & spontaneus
+% DOES remove mean before PCA, as defualt of pca.m function.
+% Use "reshape" as a trick to get only the indices you want, first. 
 
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
@@ -870,4 +884,10 @@ parameters.loop_list.things_to_save.results.level = 'mouse';
 parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'}}; 
 
 RunAnalysis({@ReshapeData, @PCA_forRunAnalysis}, parameters);
+
+%% Concatenate acrosss mice, motorized & spontaneous (for PCA)
+
+%% Run PCA across mice 
+
+%% Split PCA weights back to orginal mouse/behavior/roll/instance ID
 
