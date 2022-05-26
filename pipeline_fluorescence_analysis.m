@@ -18,6 +18,7 @@ parameters.mice_all = mice_all;
 
 % ****Change here if there are specific mice, days, and/or stacks you want to work with**** 
 parameters.mice_all = parameters.mice_all(1);
+parameters.mice_all(1).days = parameters.mice_all(1).days(10:end);
 
 % Include stacks from a "spontaneous" field of mice_all?
 parameters.use_spontaneous_also = true;
@@ -30,11 +31,13 @@ parameters.xDim = 256;
 % Load names of motorized periods
 load([parameters.dir_exper 'periods_nametable.mat']);
 
-
 periods_spontaneous = {'rest';'walk';'startwalk';'prewalk';'stopwalk';'postwalk';'full_onset';'full_offset'};
 
 % Create a shared motorized & spontaneous list.
 periods_bothConditions = [periods.condition; periods_spontaneous]; 
+
+% Make list of transformation types for iterating later.
+transformations = {'not transformed'; "Fisher transformed"};
 
 %% Run fluorescence extraction. 
 
@@ -82,7 +85,6 @@ parameters.loop_list.things_to_save.timeseries.level = 'stack';
 RunAnalysis({@ExtractFluorescenceTimeseries}, parameters);
 
 %% Motorized: Segment fluorescence by behavior period
-
 % We don't care about the specifics of the behavior yet, 
 
 % Always clear loop list first. 
@@ -128,7 +130,6 @@ parameters.loop_list.things_to_save.segmented_timeseries.variable= {'segmented_t
 parameters.loop_list.things_to_save.segmented_timeseries.level = 'stack';
 
 RunAnalysis({@SegmentTimeseriesData}, parameters);
-
 
 %% SPONTANEOUS-- Segment fluorescence by behavior period
 
@@ -339,6 +340,8 @@ parameters.loop_list.things_to_save.roll_number.level = 'mouse';
 RunAnalysis({@RollData}, parameters);
 
 %% Correlate data
+% Separating these into smaller files because correlating takes a long time
+% & I want the progress to be saved periodically.
 
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
@@ -366,7 +369,7 @@ parameters.loop_list.things_to_load.data.variable= {'timeseries_rolled{', 'perio
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.correlation.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_save.correlation.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\not transformed\'], 'mouse', '\instances\'};
 parameters.loop_list.things_to_save.correlation.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
 parameters.loop_list.things_to_save.correlation.variable= {'correlations'}; 
 parameters.loop_list.things_to_save.correlation.level = 'period';
@@ -376,7 +379,35 @@ RunAnalysis({@CorrelateTimeseriesData}, parameters);
 %% Run Fischer z - transformation 
 % From here on, can run everything with a "transform" iterator -- "not
 % transformed" or "fischer transformed".
+% Save as separate files so you match the structure of the correlation
+% matrices for looping in the next steps. 
 
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods'}, 'period_iterator';            
+               };
+
+parameters.loop_variables.periods = periods_bothConditions; 
+parameters.loop_variables.mice_all = parameters.mice_all;
+
+% Input
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\not transformed\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
+parameters.loop_list.things_to_load.data.level = 'period';
+
+% Output 
+parameters.loop_list.things_to_save.data_transformed.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\Fisher transformed\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_save.data_transformed.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
+parameters.loop_list.things_to_save.data_transformed.variable= {'correlations'}; 
+parameters.loop_list.things_to_save.data_transformed.level = 'period';
+
+RunAnalysis({@CorrelateTimeseriesData}, parameters);
 
 %% Average rolled correlations
 
@@ -386,7 +417,9 @@ parameters = rmfield(parameters,'loop_list');
 end
 
 % Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+parameters.loop_list.iterators = {
+               
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
 
