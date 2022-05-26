@@ -14,7 +14,7 @@ function [] = segment_fluorescence_motorizedTreadmill(parameters)
     parameters.input_data_variable= 'timeseries'; 
   
     % Establish base output directory
-    parameters.dir_out_base=[parameters.dir_exper 'fluorescence segemented by behavior\'];
+    parameters.dir_out_base=[parameters.dir_exper 'fluorescence segmented by behavior\'];
     
     % Output file name. 
     parameters.output_filename = {'segmented_fluorescence_', 'stack number', '.mat'}; 
@@ -27,11 +27,9 @@ function [] = segment_fluorescence_motorizedTreadmill(parameters)
     
     % Establish concatenation dimension.
     parameters.concatDim = 3;    
-
-    % Make a separate variable for the output variable searching variable
-    % of SegmentTimeseriesData.m . Need it in this case because you need a
-    % dot for the output variable the other times you use it.
-    parameters.output_variable_searching = 'fluorescence_timeseries';
+    
+    % For now, skip motor maintaining, m_p_nochange  continued rest and walkings
+    parameters.periods_all(parameters.variable_duration) = [];
     
     % Tell user where data is being saved
     disp(['Data saved in '  parameters.dir_out_base]); 
