@@ -55,6 +55,10 @@ parameters.loop_variables.conditions = conditions;
 parameters.loop_variables.conditions_stack_locations = conditions_stack_locations;
 
 %% Run fluorescence extraction. 
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
 
 % Iterators
 parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
@@ -68,19 +72,16 @@ parameters.sourcesDim = 3;
 parameters.weightedMean = true; 
 
 % Input values
-
 % Source masks
 parameters.loop_list.things_to_load.sources.dir = {[parameters.dir_exper 'spatial segmentation\500 SVD components\manual assignments\'], 'mouse', '\'};
 parameters.loop_list.things_to_load.sources.filename= {'sources_reordered.mat'};
 parameters.loop_list.things_to_load.sources.variable= {'sources'};
 parameters.loop_list.things_to_load.sources.level = 'mouse';
-
 % Preprocessed fluorescence data videos
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'preprocessing\fully preprocessed stacks\'], 'mouse', '\', 'day', '\'};
 parameters.loop_list.things_to_load.data.filename= {'data', 'stack', '.mat'};
 parameters.loop_list.things_to_load.data.variable= {'data'}; 
 parameters.loop_list.things_to_load.data.level = 'stack';
-
 % Brain masks to apply to sources, if necessary. (Source formats need to
 % match the fluorescence data videos formats)
 parameters.loop_list.things_to_load.indices_of_mask.dir = {[parameters.dir_exper 'preprocessing\masks\']};
@@ -98,8 +99,6 @@ parameters.loop_list.things_to_save.timeseries.level = 'stack';
 RunAnalysis({@ExtractFluorescenceTimeseries}, parameters);
 
 %% Motorized: Segment fluorescence by behavior period
-% We don't care about the specifics of the behavior yet, 
-
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
@@ -127,7 +126,6 @@ parameters.loop_list.things_to_load.timeseries.dir = {[parameters.dir_exper 'flu
 parameters.loop_list.things_to_load.timeseries.filename= {'timeseries', 'stack', '.mat'};
 parameters.loop_list.things_to_load.timeseries.variable= {'timeseries'}; 
 parameters.loop_list.things_to_load.timeseries.level = 'stack';
-
 % Time ranges
 parameters.loop_list.things_to_load.time_ranges.dir = {[parameters.dir_exper 'behavior\motorized\period instances table format\'], 'mouse', '\', 'day', '\'};
 parameters.loop_list.things_to_load.time_ranges.filename= {'all_periods_', 'stack', '.mat'};
@@ -143,7 +141,6 @@ parameters.loop_list.things_to_save.segmented_timeseries.level = 'stack';
 RunAnalysis({@SegmentTimeseriesData}, parameters);
 
 %% SPONTANEOUS-- Segment fluorescence by behavior period
-
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
@@ -173,7 +170,6 @@ parameters.loop_list.things_to_load.timeseries.dir = {[parameters.dir_exper 'flu
 parameters.loop_list.things_to_load.timeseries.filename= {'timeseries', 'stack', '.mat'};
 parameters.loop_list.things_to_load.timeseries.variable= {'timeseries'}; 
 parameters.loop_list.things_to_load.timeseries.level = 'stack';
-
 % Time ranges
 parameters.loop_list.things_to_load.time_ranges.dir = {[parameters.dir_exper 'behavior\spontaneous\segmented behavior periods\'], 'mouse', '\', 'day', '\'};
 parameters.loop_list.things_to_load.time_ranges.filename= {'behavior_periods_', 'stack', '.mat'};
@@ -190,7 +186,6 @@ parameters.loop_list.things_to_save.segmented_timeseries.level = 'stack';
 RunAnalysis({@SegmentTimeseriesData}, parameters);
 
 %% Concatenate fluorescence by behavior per mouse 
-
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
@@ -228,15 +223,7 @@ parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
 RunAnalysis({@ConcatenateData}, parameters);
 
 %% Concatenate motorized & spontaneous together. 
-
-% Is so you can use a single loop for calculations. Will be useful later if
-% you want to run lists of behavior comparisons and don't want to make different
-% calls when you have different combinations of motorized & spontaneous. 
-% Iterators
-
-% [Make sure there aren't any issues with concatenating cells with empty
-% entries.]
-
+% Is so you can use a single loop for calculations. 
 parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'condition', 'loop_variables.conditions', 'condition_iterator';
                 };
@@ -264,7 +251,6 @@ RunAnalysis({@ConcatenateData}, parameters);
 % Because they're concatenated.
 
 %% Take average of fluorescence by behavior 
-
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
@@ -302,7 +288,6 @@ parameters.loop_list.things_to_save.std_dev.level = 'mouse';
 RunAnalysis({@AverageData}, parameters);
 
 %% Roll data 
-
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
@@ -527,10 +512,6 @@ parameters.loop_variables.periods = periods_bothConditions.condition;
 % Turning it into 2 dims. 
 parameters.toReshape = {'parameters.data'};
 parameters.reshapeDims = {'{size(parameters.data, 1), []}'};
-
-% Removal instructions. Getting all sources in first instance that are NaN,
-% remove across all instances. 
-%parameters.removalInstructions = {'data(isnan(data(:,1)), :)'};
 
 % Concatenation dimension (post reshaping & removal)
 parameters.concatDim = 2; 
@@ -906,7 +887,7 @@ parameters.loop_list.things_to_save.results.level = 'transformation';
 
 RunAnalysis({@PCA_forRunAnalysis}, parameters);
 
-%% Across mice -- Plot some PCs
+%%  Across mice -- Plot some PCs
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
