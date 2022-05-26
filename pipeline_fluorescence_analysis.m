@@ -19,8 +19,9 @@ parameters.mice_all = mice_all;
 % ****Change here if there are specific mice, days, and/or stacks you want to work with**** 
 parameters.mice_all = parameters.mice_all(1);
 
+
 % Include stacks from a "spontaneous" field of mice_all?
-parameters.use_spontaneous_also = false;
+parameters.use_spontaneous_also = true;
 
 % Other parameters
 parameters.digitNumber = 2;
@@ -32,7 +33,7 @@ parameters.pixels = [256 256];
 % Iterators
 parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
-               'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').stacks'}, 'stack_iterator'};
+               'stack', {'[loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').stacks; loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').spontaneous]'}, 'stack_iterator'};
 
 parameters.loop_variables.mice_all = parameters.mice_all;
 
@@ -71,10 +72,95 @@ parameters.loop_list.things_to_save.timeseries.level = 'stack';
 % Run 
 RunAnalysis({@ExtractFluorescenceTimeseries}, parameters);
 
-%% Segment fluorescence by behavior period
-segment_fluorescence(parameters);
+%% Motorized: Segment fluorescence by behavior period
+
+% We don't care about the specifics of the behavior yet, 
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+% Load names of periods
+load([parameters.dir_exper 'periods_nametable.mat']);
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
+                   'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').stacks'}, 'stack_iterator'};
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+parameters.loop_variables.periods_nametable = periods; 
+
+% Skip any files that don't exist (spontaneous or problem files)
+parameters.load_abort_flag = true; 
+
+% Dimension of different time range pairs.
+parameters.rangePairs = 1; 
+
+% 
+parameters.segmentDim = 1;
+parameters.concatDim = 3;
+
+% Input values. 
+% Extracted timeseries.
+parameters.loop_list.things_to_load.timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\timeseries\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.timeseries.filename= {'timeseries', 'stack', '.mat'};
+parameters.loop_list.things_to_load.timeseries.variable= {'timeseries'}; 
+parameters.loop_list.things_to_load.timeseries.level = 'stack';
+
+% Time ranges
+parameters.loop_list.things_to_load.time_ranges.dir = {[parameters.dir_exper 'behavior\motorized\period instances table format\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.time_ranges.filename= {'all_periods_', 'stack', '.mat'};
+parameters.loop_list.things_to_load.time_ranges.variable= {'all_periods.time_ranges'}; 
+parameters.loop_list.things_to_load.time_ranges.level = 'stack';
+
+% Output Values
+parameters.loop_list.things_to_save.segmented_timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\motorized\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_save.segmented_timeseries.filename= {'segmented_timeseries_', 'stack', '.mat'};
+parameters.loop_list.things_to_save.segmented_timeseries.variable= {'segmented_timeseries'}; 
+parameters.loop_list.things_to_save.segmented_timeseries.level = 'stack';
+
+RunAnalysis({@SegmentTimeseriesData}, parameters);
+
+
 
 %% Concatenate fluorescence by behavior per mouse 
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Skip any files that don't exist. 
+parameters.load_abort_flag = true; 
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
+               'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').stacks'}, 'stack_iterator';
+              
+               };
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+
+% Load motorized behavior periods list, put into loop_variables &
+% parameters.
+load([dir_exper 'periods.mat']);
+parameters.loop_variables.periods = periods; 
+parameters.periods = periods;
+
+% Time ranges
+parameters.loop_list.things_to_load.time_ranges.dir = {[parameters.dir_exper 'behavior\motorized\period instances table format\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.time_ranges.filename= {'all_periods_', 'stack', '.mat'};
+parameters.loop_list.things_to_load.time_ranges.variable= {'all_periods.time_ranges'}; 
+parameters.loop_list.things_to_load.time_ranges.level = 'stack';
+
+% Output Values
+parameters.loop_list.things_to_save.segmented_timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\motorized\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_save.segmented_timeseries.filename= {'segmented_timeseries_', 'stack', '.mat'};
+parameters.loop_list.things_to_save.segmented_timeseries.variable= {'segmented_timeseries'}; 
+parameters.loop_list.things_to_save.segmented_timeseries.level = 'stack';
+
+RunAnalysis({@SegmentTimeseriesData}, parameters);
 concatenate_fluorescence(parameters);
 
 %% Plot means of fluorescence by behavior per mouse, save figures.
