@@ -744,7 +744,7 @@ parameters.loop_list.iterators = {
                'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';           
                };
 
-parameters.concatDim = 2; 
+parameters.concatDim = 1; 
 
 parameters.toReplicate = {'parameters.data'};
 parameters.replicateDims = {'[size(parameters.reps, "correlations_concatenated",2), 1]'};
@@ -822,7 +822,7 @@ parameters.observationDim = 2;
 parameters.numComponents = (number_of_sources^2 - number_of_sources)/2; % Calculate all PCs. 
 parameters.observation_weighted_flag = true; % Use weights by mouse
 parameters.pairwise_flag = true;  % Omit NaNs when calculating covariance between two correlation values
-parameters.variable_weighted_flag = true; % Weight certain correlation values based on how many are missing/NaNs
+parameters.variable_weighted_flag = false; % Weight certain correlation values based on how many are missing/NaNs
 parameters.algorithem = 'eig';
 
 % Input
@@ -831,8 +831,8 @@ parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenat
 parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated_across_mice'}; 
 parameters.loop_list.things_to_load.data.level = 'transformation';
 
-parameters.loop_list.things_to_load.observation_weights.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\weights\'};
-parameters.loop_list.things_to_load.observation_weights.filename= {'weights_acrossmice.mat'};
+parameters.loop_list.things_to_load.observation_weights.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\input weights\']};
+parameters.loop_list.things_to_load.observation_weights.filename= {'weights.mat'};
 parameters.loop_list.things_to_load.observation_weights.variable= {'weights'}; 
 parameters.loop_list.things_to_load.observation_weights.level = 'transformation';
 
@@ -844,7 +844,7 @@ parameters.loop_list.things_to_save.results.level = 'transformation';
 
 RunAnalysis({@PCA_forRunAnalysis}, parameters);
 
-%%  Individual mice -- Plot some PCs
+%% Across mice -- Plot some PCs
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
@@ -854,7 +854,7 @@ end
 parameters.loop_list.iterators = {
     'transformation', {'loop_variables.transformations'}, 'transformation_iterator'};
 
-parameters.components_to_plot = 1:35; 
+parameters.components_to_plot = 1:20; 
 parameters.number_of_sources = 32;
 parameters.color_range = [-0.1 0.1];
 
@@ -862,13 +862,13 @@ parameters.color_range = [-0.1 0.1];
 parameters.loop_list.things_to_load.components.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\' };
 parameters.loop_list.things_to_load.components.filename= {'PCA_results.mat'};
 parameters.loop_list.things_to_load.components.variable= {'PCA_results.components'}; 
-parameters.loop_list.things_to_load.components.level = 'mouse';
+parameters.loop_list.things_to_load.components.level = 'transformation';
 
 % Output
 parameters.loop_list.things_to_save.fig.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\'};
-parameters.loop_list.things_to_save.fig.filename= {'first_35_PCs.fig'};
+parameters.loop_list.things_to_save.fig.filename= {['first_' num2str(parameters.components_to_plot(end)) '_PCs.fig']};
 parameters.loop_list.things_to_save.fig.variable= {'fig'}; 
-parameters.loop_list.things_to_save.fig.level = 'mouse';
+parameters.loop_list.things_to_save.fig.level = 'transformation';
 
 RunAnalysis({@PlotPCs}, parameters);
 
