@@ -447,7 +447,8 @@ RunAnalysis({@AverageData}, parameters);
 %% Save reshaped data (2D + roll dim)
 % You end up using this more than once, so might as well save it.
 % Always clear loop list first. 
-% Also permute so instances are in the last dimension.
+% Also permute so instances are in the last dimension. 
+% Keep only lower triangle of matrix.
 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
@@ -462,6 +463,9 @@ parameters.loop_list.iterators = {
 
 parameters.loop_variables.periods = periods_bothConditions; 
 
+% Lower triangle only.
+parameters.indices = find(tril(ones(number_of_sources), -1));
+
 % Variable/data you want to reshape. 
 parameters.toReshape = {'parameters.data'}; 
 
@@ -470,8 +474,16 @@ parameters.toReshape = {'parameters.data'};
 parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), size(parameters.data,3), size(parameters.data, 4) }'};
 
 % Permute data instructions/dimensions. Puts instances in last dimension. 
-
 parameters.DimOrder = [1, 3, 2]; 
+
+% Evaluation instructions.
+parameters.evaluation_instructions = {'if ~isempty(parameters.data);'...
+          'data_evaluated = parameters.data(parameters.indices, :,:);' ...
+          'else;'...
+          'data_evaluated = [];'...
+          'end'
+           };
+
 % Input 
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations.mat'};
@@ -479,14 +491,15 @@ parameters.loop_list.things_to_load.data.variable= {'correlations{', 'period_ite
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.data_permuted.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances reshaped\'};
-parameters.loop_list.things_to_save.data_permuted.filename= {'correlations.mat'};
-parameters.loop_list.things_to_save.data_permuted.variable= {'correlations_reshaped{', 'period_iterator', '}'}; 
-parameters.loop_list.things_to_save.data_permuted.level = 'mouse';
+parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances reshaped\'};
+parameters.loop_list.things_to_save.data_evaluated.filename= {'correlations.mat'};
+parameters.loop_list.things_to_save.data_evaluated.variable= {'correlations_reshaped{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_save.data_evaluated.level = 'mouse';
 
-parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'}}; 
+parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'};
+                                         {'data_permuted', 'data'}}; 
 
-RunAnalysis({@ReshapeData, @PermuteData}, parameters); 
+RunAnalysis({@ReshapeData, @PermuteData, @EvaluateOnData}, parameters); 
 
 %% Put all correlation matrices into same concatenation (for PCA and other metrics)
 % Always clear loop list first. 
@@ -614,11 +627,6 @@ parameters.loop_list.iterators = {
     'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
     'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'};
 
-% Reshape parameters.
-parameters.indices = find(tril(ones(number_of_sources), -1));
-parameters.toReshape = {'parameters.data(parameters.indices, :)'};
-parameters.reshapeDims = {'{numel(parameters.indices),size(parameters.data,2)}'};
-
 % PCA parameters.
 parameters.observationDim = 2;
 parameters.numComponents = 100;
@@ -635,9 +643,7 @@ parameters.loop_list.things_to_save.results.filename= {'PCA_results.mat'};
 parameters.loop_list.things_to_save.results.variable= {'PCA_results'}; 
 parameters.loop_list.things_to_save.results.level = 'mouse';
 
-parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'}}; 
-
-RunAnalysis({@ReshapeData, @PCA_forRunAnalysis}, parameters);
+RunAnalysis({@PCA_forRunAnalysis}, parameters);
 
 %%  quickly plot some PCs
 mouse = '1087';
