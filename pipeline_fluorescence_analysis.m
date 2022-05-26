@@ -35,11 +35,15 @@ conditions_stack_locations = {'stacks'; 'spontaneous'};
 
 % Load names of motorized periods
 load([parameters.dir_exper 'periods_nametable.mat']);
+periods_motorized = periods;
 
-periods_spontaneous = {'rest';'walk';'startwalk';'prewalk';'stopwalk';'postwalk';'full_onset';'full_offset'};
+% Load names of spontaneous periods
+load([parameters.dir_exper 'periods_nametable_spontaneous.mat']);
+periods_spontaneous = periods;
+clear periods; 
 
 % Create a shared motorized & spontaneous list.
-periods_bothConditions = [periods.condition; periods_spontaneous]; 
+periods_bothConditions = [periods_motorized; periods_spontaneous]; 
 
 % Make list of transformation types for iterating later.
 transformations = {'not transformed'; 'Fisher transformed'};
