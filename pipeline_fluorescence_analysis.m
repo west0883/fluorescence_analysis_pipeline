@@ -555,55 +555,54 @@ cmap_diffs = flipud(cbrewer('div', 'RdBu', 256, 'nearest'));
 c_range_diffs = [-0.3 0.3];
 figure; 
 
-% Spontaneous
-
-% rest
-filename = 'correlations_average_rest.mat';
-spon_rest = load([parameters.dir_exper 'fluorescence analysis\correlations\' mouse '\average rolled\' filename]);
-subplot(2,5,1); imagesc(spon_rest.average);  colorbar; colormap(gca,cmap_corrs); caxis([0 1]);
-title('spon rest');
-
-% cont walk
-filename = 'correlations_average_walk.mat';
-spon_walk = load([parameters.dir_exper 'fluorescence analysis\correlations\' mouse '\average rolled\' filename]);
-spon_walk_diff = spon_walk.average - spon_rest.average;
-subplot(2,5,2); imagesc(spon_walk_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
-title('diff spon walk');
-
-% Motorized
-
-% rest
 filename = 'correlations_rolled_average.mat';
-motor = load([parameters.dir_exper 'fluorescence analysis\correlations\' mouse '\average rolled\' filename]);
-subplot(2,5,6); imagesc(motor.average{180});  colorbar; colormap(gca,cmap_corrs); caxis([0 1]);
-title('motor rest');
 
-% walk 1600
-motor_walk_diff = motor.average{176} - motor.average{180};
-subplot(2,5,7); imagesc(motor_walk_diff); colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
-title('diff motor walk 1600');
+for transi = 1:numel(transformations)
 
-% walk 2000
-motor_walk_diff = motor.average{177} - motor.average{180};
-subplot(2,5,8); imagesc(motor_walk_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
-title('diff motor walk 2000');
-
-% walk 2400
-motor_walk_diff = motor.average{178} - motor.average{180};
-subplot(2,5,9); imagesc(motor_walk_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
-title('diff motor walk 2400');
-
-% walk 2800
-motor_walk_diff = motor.average{179} - motor.average{180};
-subplot(2,5,10); imagesc(motor_walk_diff); colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
-title('diff motor walk 2800');
-
-motor_rest_diff = motor.average{180} - spon_rest.average;
-subplot(2,5,5); imagesc(motor_rest_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
-title('diff motor rest - spon rest');
-
-sgtitle(['mouse ' mouse]);
-
+    transformation = transformations{transi};
+    motor = load([parameters.dir_exper 'fluorescence analysis\correlations\' transformation '\' mouse '\average rolled\' filename]);
+    figure;
+    spon_walk.average = motor.average{190};
+    spon_rest.average = motor.average{189};
+    
+    subplot(2,5,1); imagesc(spon_rest.average);  colorbar; colormap(gca,cmap_corrs); caxis([0 1]);
+    title('spon rest');
+    
+    spon_walk_diff = spon_walk.average - spon_rest.average;
+    subplot(2,5,2); imagesc(spon_walk_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
+    title('diff spon walk');
+    
+    
+    % rest
+    subplot(2,5,6); imagesc(motor.average{180});  colorbar; colormap(gca,cmap_corrs); caxis([0 1]);
+    title('motor rest');
+    
+    % walk 1600
+    motor_walk_diff = motor.average{176} - motor.average{180};
+    subplot(2,5,7); imagesc(motor_walk_diff); colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
+    title('diff motor walk 1600');
+    
+    % walk 2000
+    motor_walk_diff = motor.average{177} - motor.average{180};
+    subplot(2,5,8); imagesc(motor_walk_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
+    title('diff motor walk 2000');
+    
+    % walk 2400
+    motor_walk_diff = motor.average{178} - motor.average{180};
+    subplot(2,5,9); imagesc(motor_walk_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
+    title('diff motor walk 2400');
+    
+    % walk 2800
+    motor_walk_diff = motor.average{179} - motor.average{180};
+    subplot(2,5,10); imagesc(motor_walk_diff); colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
+    title('diff motor walk 2800');
+    
+    motor_rest_diff = motor.average{180} - spon_rest.average;
+    subplot(2,5,5); imagesc(motor_rest_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
+    title('diff motor rest - spon rest');
+    
+    sgtitle([mouse ', ' transformation]);
+end
 
 %% (just across 1 mouse for now) Run PCA with RunAnalysis -- both motorized & spontaneus
 % DOES remove mean before PCA, as defualt of pca.m function.
