@@ -19,7 +19,6 @@ parameters.mice_all = mice_all;
 % ****Change here if there are specific mice, days, and/or stacks you want to work with**** 
 parameters.mice_all = parameters.mice_all(1);
 
-
 % Include stacks from a "spontaneous" field of mice_all?
 parameters.use_spontaneous_also = true;
 
@@ -27,6 +26,7 @@ parameters.use_spontaneous_also = true;
 parameters.digitNumber = 2;
 parameters.pixels = [256 256];
 
+periods_spontaneous = {'rest';'walk';'startwalk';'prewalk';'stopwalk';'postwalk';'full_onset';'full_offset'};
 
 %% Run fluorescence extraction. 
 
@@ -346,11 +346,16 @@ parameters.loop_variables.periods = periods;
 
 parameters.loop_variables.mice_all = parameters.mice_all;
 
-% Dimensions for reshaping before cnocatenation
-parameters.reshapeDims = {'{size(parameters.data, 1), size(parameters.data,2), []}'};
+% Dimensions for reshaping, before removing data & before cnocatenation.
+% Turning it into 2 dims. 
+parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), []}'};
 
-% Concatenation dimension (post reshaping)
-parameters.concatDim = 3; 
+% Removal instructions. Getting all sources in first instance that are NaN,
+% remove across all instances. 
+%parameters.removalInstructions = {'data(isnan(data(:,1)), :)'};
+
+% Concatenation dimension (post reshaping & removal)
+parameters.concatDim = 2; 
 
 % Input 
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\motorized\'], 'mouse', '\instances\'};
@@ -366,13 +371,328 @@ parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
 
 % Things to rename/reassign between the two functions (frist column renamed to
 % second column. Pairs for each level. Each row is a level.
-parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'}};
+parameters.loop_list.things_to_rename = { %{'data_removed', 'data'}; 
+                                         {'data_reshaped', 'data'}};
 
 % Things to hold example (didn't use here). Each row is a level.
 % parameters.loop_list.things_to_hold = {{'data'}}; 
 
 RunAnalysis({@ReshapeData, @ConcatenateData}, parameters); 
 
-%% 
+%%  Run PCA ( not saving yet);
 
+[Zpca, U, mu, eigVecs] = PCA(correlations_concatenated',20);
 
+Zpca_reshaped = reshape(Zpca', 29,29, 20); 
+
+figure; for i = 1:20; subplot(4,5,i); imagesc(Zpca_reshaped(:,:,i)); caxis([-30 30]); colorbar; end;
+sgtitle('PCA');
+
+%% *******************************************
+% ********* SPONTANEOUS DATA ANALYSIS ********
+% ********************************************
+
+%% SPONTANEOUS-- Segment fluorescence by behavior period
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
+                   'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').spontaneous'}, 'stack_iterator';
+                   'period', {'loop_variables.periods_spontaneous{:}'}, 'period_iterator'};
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
+
+% Skip any files that don't exist (spontaneous or problem files)
+parameters.load_abort_flag = true; 
+
+% Dimension of different time range pairs.
+parameters.rangePairs = 1; 
+
+% 
+parameters.segmentDim = 1;
+parameters.concatDim = 3;
+
+% Input values. 
+% Extracted timeseries.
+parameters.loop_list.things_to_load.timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\timeseries\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.timeseries.filename= {'timeseries', 'stack', '.mat'};
+parameters.loop_list.things_to_load.timeseries.variable= {'timeseries'}; 
+parameters.loop_list.things_to_load.timeseries.level = 'stack';
+
+% Time ranges
+parameters.loop_list.things_to_load.time_ranges.dir = {[parameters.dir_exper 'behavior\spontaneous\segmented behavior periods\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.time_ranges.filename= {'behavior_periods_', 'stack', '.mat'};
+parameters.loop_list.things_to_load.time_ranges.variable= {'behavior_periods.', 'period'}; 
+parameters.loop_list.things_to_load.time_ranges.level = 'stack';
+
+% Output Values
+parameters.loop_list.things_to_save.segmented_timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\spontaneous\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_save.segmented_timeseries.filename= {'segmented_timeseries_', 'stack', '.mat'};
+parameters.loop_list.things_to_save.segmented_timeseries.variable= {'segmented_timeseries.', 'period'}; 
+parameters.loop_list.things_to_save.segmented_timeseries.level = 'stack';
+
+RunAnalysis({@SegmentTimeseriesData}, parameters);
+
+%% SPONTANEOUS-- Concatenate fluorescence by behavior per mouse 
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
+               'period', {'loop_variables.periods_spontaneous{:}'}, 'period_iterator';
+               'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
+               'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').spontaneous'}, 'stack_iterator';             
+                };
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
+
+% Dimension to concatenate the timeseries across.
+parameters.concatDim = 3; 
+
+% Clear any reshaping instructions 
+if isfield(parameters, 'reshapeDims')
+    parameters = rmfield(parameters,'reshapeDims');
+end
+
+% Input Values
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\spontaneous\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.data.filename= {'segmented_timeseries_', 'stack', '.mat'};
+parameters.loop_list.things_to_load.data.variable= {'segmented_timeseries.', 'period'}; 
+parameters.loop_list.things_to_load.data.level = 'stack';
+
+% Output values
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\spontaneous\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.concatenated_data.filename= {'concatenated_timeseries_', 'period', '.mat'};
+parameters.loop_list.things_to_save.concatenated_data.variable= {'timeseries'}; 
+parameters.loop_list.things_to_save.concatenated_data.level = 'period';
+
+RunAnalysis({@ConcatenateData}, parameters);
+
+%% SPONTANEOUS -- Roll data
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
+               'period', {'loop_variables.periods_spontaneous{:}'}, 'period_iterator'             
+                };
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
+
+%Dimension to roll across (time dimension). Will automatically add new
+% data to the last + 1 dimension. 
+parameters.rollDim = 1; 
+
+% Window and step sizes (in frames)
+parameters.windowSize = 20;
+parameters.stepSize = 5; 
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\spontaneous\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.filename= {'concatenated_timeseries_', 'period', '.mat'};
+parameters.loop_list.things_to_load.data.variable= {'timeseries'}; 
+parameters.loop_list.things_to_load.data.level = 'period';
+
+% Output
+parameters.loop_list.things_to_save.data_rolled.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\spontaneous\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.data_rolled.filename= {'timeseries_rolled_', 'period', '.mat'};
+parameters.loop_list.things_to_save.data_rolled.variable= {'timeseries_rolled'}; 
+parameters.loop_list.things_to_save.data_rolled.level = 'period';
+
+parameters.loop_list.things_to_save.roll_number.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\spontaneous\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.roll_number.filename= {'roll_number_', 'period', '.mat'};
+parameters.loop_list.things_to_save.roll_number.variable= {'roll_number'}; 
+parameters.loop_list.things_to_save.roll_number.level = 'period';
+
+RunAnalysis({@RollData}, parameters);
+
+%% SPONTANEOUS -- Correlations
+tic
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
+               'period', {'loop_variables.periods_spontaneous{1:end}'}, 'period_iterator'             
+                };
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
+
+% Dimension to correlate across (dimensions where different sources are). 
+parameters.sourceDim = 2; 
+
+% Time dimension (the dimension of the timeseries that will be correlated)
+parameters.timeDim = 1; 
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\spontaneous\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.filename= {'timeseries_rolled_', 'period', '.mat'};
+parameters.loop_list.things_to_load.data.variable= {'timeseries_rolled'}; 
+parameters.loop_list.things_to_load.data.level = 'period';
+
+% Output
+parameters.loop_list.things_to_save.correlation.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_save.correlation.filename= {'correlations_', 'period', '.mat'};
+parameters.loop_list.things_to_save.correlation.variable= {'correlations'}; 
+parameters.loop_list.things_to_save.correlation.level = 'period';
+
+RunAnalysis({@CorrelateTimeseriesData}, parameters);
+toc
+
+%% SPONTANEOUS-- Average correlations 
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
+               'period', {'loop_variables.periods_spontaneous{:}'}, 'period_iterator'             
+                };
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
+
+% Dimension to average across
+parameters.averageDim = 3; 
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
+parameters.loop_list.things_to_load.data.level = 'period';
+
+% Output
+parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\average rolled\'};
+parameters.loop_list.things_to_save.average.filename= {'correlations_average_', 'period', '.mat'};
+parameters.loop_list.things_to_save.average.variable= {'average'}; 
+parameters.loop_list.things_to_save.average.level = 'period';
+
+parameters.loop_list.things_to_save.std_dev.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\average rolled\'};
+parameters.loop_list.things_to_save.std_dev.filename= {'correlations_std_', 'period', '.mat'};
+parameters.loop_list.things_to_save.std_dev.variable= {'std_dev'}; 
+parameters.loop_list.things_to_save.std_dev.level = 'period';
+
+RunAnalysis({@AverageData}, parameters);
+
+%% SPONTANEOUS -- Concatenate all correlations together (for PCA or other metrics)
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
+               'period', {'loop_variables.periods_spontaneous{:}'}, 'period_iterator'             
+                };
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
+
+% Dimensions for reshaping, before removing data & before cnocatenation.
+% Turning it into 2 dims. 
+parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), []}'};
+
+% Concatenation dimension (post reshaping & removal)
+parameters.concatDim = 2; 
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
+parameters.loop_list.things_to_load.data.level = 'period';
+
+% Output
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_save.concatenated_data.filename= {'correlations_all_concatenated.mat'};
+parameters.loop_list.things_to_save.concatenated_data.variable= {'correlations_concatenated'}; 
+parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
+
+% Things to rename/reassign between the two functions (frist column renamed to
+% second column. Pairs for each level. Each row is a level.
+parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'}};
+
+RunAnalysis({@ReshapeData, @ConcatenateData}, parameters); 
+
+%%  SPONTANEOUS-- Run PCA ( not saving yet);
+
+[Zpca, U, mu, eigVecs] = PCA(correlations_concatenated',20);
+
+Zpca_reshaped = reshape(Zpca', 29,29, 20); 
+
+figure; for i = 1:20; subplot(4,5,i); imagesc(Zpca_reshaped(:,:,i)); caxis([-30 30]); colorbar; end;
+sgtitle('PCA');
+
+%% Visualize difference in mean continued rest & walk for motorized & spontaneous
+mouse ='1087';
+cmap_corrs = parula(256); 
+cmap_diffs = flipud(cbrewer('div', 'RdBu', 256, 'nearest'));
+c_range_diffs = [-0.3 0.3];
+figure; 
+
+% Spontaneous
+
+% rest
+filename = 'correlations_average_rest.mat';
+spon_rest = load([parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\' mouse '\average rolled\' filename]);
+subplot(2,5,1); imagesc(spon_rest.average);  colorbar; colormap(gca,cmap_corrs); caxis([0 1]);
+title('spon rest');
+
+% cont walk
+filename = 'correlations_average_walk.mat';
+spon_walk = load([parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\' mouse '\average rolled\' filename]);
+spon_walk_diff = spon_walk.average - spon_rest.average;
+subplot(2,5,2); imagesc(spon_walk_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
+title('diff spon walk');
+
+% Motorized
+
+% rest
+filename = 'correlations_rolled_average.mat';
+motor = load([parameters.dir_exper 'fluorescence analysis\correlations\motorized\' mouse '\average rolled\' filename]);
+subplot(2,5,6); imagesc(motor.average{180});  colorbar; colormap(gca,cmap_corrs); caxis([0 1]);
+title('motor rest');
+
+% walk 1600
+motor_walk_diff = motor.average{176} - motor.average{180};
+subplot(2,5,7); imagesc(motor_walk_diff); colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
+title('diff motor walk 1600');
+
+% walk 2000
+motor_walk_diff = motor.average{177} - motor.average{180};
+subplot(2,5,8); imagesc(motor_walk_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
+title('diff motor walk 2000');
+
+% walk 2400
+motor_walk_diff = motor.average{178} - motor.average{180};
+subplot(2,5,9); imagesc(motor_walk_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
+title('diff motor walk 2400');
+
+% walk 2800
+motor_walk_diff = motor.average{179} - motor.average{180};
+subplot(2,5,10); imagesc(motor_walk_diff); colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
+title('diff motor walk 2800');
+
+motor_rest_diff = motor.average{180} - spon_rest.average;
+subplot(2,5,5); imagesc(motor_rest_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
+title('diff motor rest - spon rest');
+
+sgtitle(['mouse ' mouse]);
