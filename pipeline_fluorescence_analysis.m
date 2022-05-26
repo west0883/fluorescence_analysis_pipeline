@@ -595,7 +595,7 @@ parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated'}
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.results.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_save.results.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse' '\'};
 parameters.loop_list.things_to_save.results.filename= {'PCA_results.mat'};
 parameters.loop_list.things_to_save.results.variable= {'PCA_results'}; 
 parameters.loop_list.things_to_save.results.level = 'mouse';
@@ -610,7 +610,7 @@ indices = find(tril(ones(number_of_sources), -1));
 for i = 1:numel(transformations)
     transformation = transformations{i};
     
-    load(['Y:\Sarah\Analysis\Experiments\Random Motorized Treadmill\fluorescence analysis\correlations\' transformation '\' mouse '\PCA individual mouse\PCA_results.mat']);
+    load(['Y:\Sarah\Analysis\Experiments\Random Motorized Treadmill\fluorescence analysis\PCA individual mouse\' transformation '\' mouse '\PCA_results.mat']);
    
     figure;
     for componenti = 1:components_to_plot
@@ -650,13 +650,13 @@ parameters.loop_list.things_to_load.division_points.filename= {'correlations_all
 parameters.loop_list.things_to_load.division_points.variable= {'concatenation_origin'}; 
 parameters.loop_list.things_to_load.division_points.level = 'mouse';
 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse', '\'};
 parameters.loop_list.things_to_load.data.filename= {'PCA_results.mat'};
 parameters.loop_list.things_to_load.data.variable= {'PCA_results.scores'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.data_divided.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_save.data_divided.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse', '\'};
 parameters.loop_list.things_to_save.data_divided.filename= {'PCA_scores_dividedbybehavior.mat'};
 parameters.loop_list.things_to_save.data_divided.variable= {'scores'}; 
 parameters.loop_list.things_to_save.data_divided.level = 'mouse';
@@ -687,13 +687,13 @@ parameters.loop_list.things_to_load.timeseries.filename= {'timeseries_rolled.mat
 parameters.loop_list.things_to_load.timeseries.variable= {'timeseries_rolled'}; 
 parameters.loop_list.things_to_load.timeseries.level = 'mouse';
 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse', '\'};
 parameters.loop_list.things_to_load.data.filename= {'PCA_scores_dividedbybehavior.mat'};
 parameters.loop_list.things_to_load.data.variable= {'scores'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output 
-parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse', '\'};
 parameters.loop_list.things_to_save.data_evaluated.filename= {'PCA_scores_dividedbybehavior_withempties.mat'};
 parameters.loop_list.things_to_save.data_evaluated.variable= {'scores'}; 
 parameters.loop_list.things_to_save.data_evaluated.level = 'mouse';
@@ -729,7 +729,7 @@ parameters.reshapeDims = {'{parameters.roll_number, parameters.instances, []}'};
 parameters.DimOrder = [3, 1, 2]; 
 
 % Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse', '\'};
 parameters.loop_list.things_to_load.data.filename= {'PCA_scores_dividedbybehavior_withempties.mat'};
 parameters.loop_list.things_to_load.data.variable= {'scores{', 'period_iterator', '}'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
@@ -740,7 +740,7 @@ parameters.loop_list.things_to_load.roll_number.variable= {'roll_number{', 'peri
 parameters.loop_list.things_to_load.roll_number.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.data_permuted.dir = {[parameters.dir_exper 'fluorescence analysis\PCA scores individual mouse\'],'transformation', '\', 'mouse', '\instances reshaped\'};
+parameters.loop_list.things_to_save.data_permuted.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse', '\instances reshaped\'};
 parameters.loop_list.things_to_save.data_permuted.filename= {'values.mat'};
 parameters.loop_list.things_to_save.data_permuted.variable= {'values{', 'period_iterator', ', 1}'}; 
 parameters.loop_list.things_to_save.data_permuted.level = 'mouse';
@@ -779,7 +779,7 @@ parameters.loop_list.things_to_load.data.level = 'mouse';
 parameters.loop_list.things_to_load.data.load_function = @matfile;
 
 % Output
-parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\weights for PCA\']};
+parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\input weights\']};
 parameters.loop_list.things_to_save.data_evaluated.filename= {'number_correlations_bymouse.mat'};
 parameters.loop_list.things_to_save.data_evaluated.variable= {'numbers'}; 
 parameters.loop_list.things_to_save.data_evaluated.level = 'end';
@@ -807,7 +807,7 @@ parameters.toReplicate = {'parameters.data'};
 parameters.replicateDims = {'[size(parameters.reps, "correlations_concatenated",2), 1]'};
 
 % Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\weights for PCA\']};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\input weights\']};
 parameters.loop_list.things_to_load.data.filename= {'number_correlations_bymouse.mat'};
 parameters.loop_list.things_to_load.data.variable= {'numbers(', 'mouse_iterator', ')'}; 
 parameters.loop_list.things_to_load.data.level = 'transformation';
@@ -819,7 +819,7 @@ parameters.loop_list.things_to_load.reps.level = 'mouse';
 parameters.loop_list.things_to_load.reps.load_function = @matfile;
 
 % Output 
-parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\concatenated across mice\'};
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\input weights\']};
 parameters.loop_list.things_to_save.concatenated_data.filename= {'weights.mat'};
 parameters.loop_list.things_to_save.concatenated_data.variable= {'weights'}; 
 parameters.loop_list.things_to_save.concatenated_data.level = 'transformation';
