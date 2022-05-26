@@ -17,7 +17,7 @@ load([parameters.dir_exper '\mice_all.mat']);
 parameters.mice_all = mice_all;
 
 % ****Change here if there are specific mice, days, and/or stacks you want to work with**** 
-parameters.mice_all = parameters.mice_all(1);
+parameters.mice_all = parameters.mice_all([2 3 5]);
 %parameters.mice_all(1).days = parameters.mice_all(1).days(10:end);
 
 % Include stacks from a "spontaneous" field of mice_all?
@@ -108,7 +108,7 @@ end
 parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
                    'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').stacks'}, 'stack_iterator'};
-parameters.loop_variables.periods_nametable = periods; 
+parameters.loop_variables.periods_nametable = periods_motorized; 
 
 % Skip any files that don't exist (spontaneous or problem files)
 parameters.load_abort_flag = true; 
