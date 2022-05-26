@@ -155,7 +155,7 @@ parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 
                    'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').spontaneous'}, 'stack_iterator';
                    'period', {'loop_variables.periods_spontaneous{:}'}, 'period_iterator'};
 
-parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
+parameters.loop_variables.periods_spontaneous = periods_spontaneous.condition; 
 
 % Skip any files that don't exist (spontaneous or problem files)
 parameters.load_abort_flag = true; 
@@ -276,7 +276,7 @@ parameters.loop_list.iterators = {
                 'period', {'loop_variables.periods'}, 'period_iterator';              
                };
 
-parameters.loop_variables.periods = periods_bothConditions; 
+parameters.loop_variables.periods = periods_bothConditions.condition; 
 parameters.loop_variables.mice_all = parameters.mice_all;
 
 % Dimension to average across
@@ -313,7 +313,7 @@ parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
 
-parameters.loop_variables.periods = periods_bothConditions; 
+parameters.loop_variables.periods = periods_bothConditions.condition; 
 
 % Dimension to roll across (time dimension). Will automatically add new
 % data to the last + 1 dimension. 
@@ -356,7 +356,7 @@ parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
 
-parameters.loop_variables.periods = periods_bothConditions; 
+parameters.loop_variables.periods = periods_bothConditions.condition; 
 
 % Dimension to correlate across (dimensions where different sources are). 
 parameters.sourceDim = 2; 
@@ -392,7 +392,7 @@ parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
 
-parameters.loop_variables.periods = periods_bothConditions; 
+parameters.loop_variables.periods = periods_bothConditions.condition; 
 
 % Input
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\not transformed\'], 'mouse', '\instances\'};
@@ -427,7 +427,7 @@ parameters.loop_list.iterators = {
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
 
-parameters.loop_variables.periods = periods_bothConditions; 
+parameters.loop_variables.periods = periods_bothConditions.condition; 
 
 % Dimension to average across
 parameters.averageDim = 3; 
@@ -468,7 +468,7 @@ parameters.loop_list.iterators = {
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
 
-parameters.loop_variables.periods = periods_bothConditions; 
+parameters.loop_variables.periods = periods_bothConditions.condition; 
 
 % Lower triangle only.
 parameters.indices = find(tril(ones(number_of_sources), -1));
@@ -521,7 +521,7 @@ parameters.loop_list.iterators = {
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
 
-parameters.loop_variables.periods = periods_bothConditions; 
+parameters.loop_variables.periods = periods_bothConditions.condition; 
 
 % Dimensions for reshaping, before removing data & before cnocatenation.
 % Turning it into 2 dims. 
@@ -694,7 +694,7 @@ parameters.loop_list.iterators = {
     'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
      };
 
-parameters.loop_variables.periods = periods_bothConditions; 
+parameters.loop_variables.periods = periods_bothConditions.condition; 
 
 parameters.fromConcatenateData = true;
 parameters.divideDim = 1; 
@@ -770,7 +770,7 @@ parameters.loop_list.iterators = {
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
 
-parameters.loop_variables.periods = periods_bothConditions; 
+parameters.loop_variables.periods = periods_bothConditions.condition; 
 
 parameters.evaluation_instructions = {['a = size(parameters.data,1);' ...
       'parameters.instances = a ./ parameters.roll_number;'...
