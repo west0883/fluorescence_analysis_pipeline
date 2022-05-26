@@ -56,8 +56,14 @@ function [parameters] = VisualizeAverageRolledData(parameters)
          
          data = parameters.data{indices(i)};
          
+         % Skip this plot if data is empty
+         if isempty(data)
+             continue
+         end
          if pc_flag
+           
             imagesc(data(1:30,:));
+            
          else
             imagesc(data);
          end
