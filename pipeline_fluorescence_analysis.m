@@ -376,9 +376,7 @@ parameters.loop_list.things_to_save.correlation.level = 'period';
 
 RunAnalysis({@CorrelateTimeseriesData}, parameters);
 
-%% Run Fischer z - transformation 
-% From here on, can run everything with a "transform" iterator -- "not
-% transformed" or "fischer transformed".
+%% Run Fisher z - transformation 
 % Save as separate files so you match the structure of the correlation
 % matrices for looping in the next steps. 
 
@@ -407,7 +405,12 @@ parameters.loop_list.things_to_save.data_transformed.filename= {'correlations_',
 parameters.loop_list.things_to_save.data_transformed.variable= {'correlations'}; 
 parameters.loop_list.things_to_save.data_transformed.level = 'period';
 
-RunAnalysis({@CorrelateTimeseriesData}, parameters);
+RunAnalysis({@FisherTransform}, parameters);
+
+%% 
+% From here on, can run everything with a "transform" iterator -- "not
+% transformed" or "Fisher transformed". (Because I want to see how the
+% analyses look with & without transformation.)
 
 %% Average rolled correlations
 
@@ -418,7 +421,7 @@ end
 
 % Iterators
 parameters.loop_list.iterators = {
-               
+               'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
                'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
@@ -431,18 +434,18 @@ parameters.averageDim = 3;
 
 parameters.loop_variables.mice_all = parameters.mice_all;
 % Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
 parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
 parameters.loop_list.things_to_load.data.level = 'period';
 
 % Output
-parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'mouse', '\average rolled\'};
+parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\average rolled\'};
 parameters.loop_list.things_to_save.average.filename= {'correlations_rolled_average.mat'};
 parameters.loop_list.things_to_save.average.variable= {'average{', 'period_iterator', ',1}'}; 
 parameters.loop_list.things_to_save.average.level = 'mouse';
 
-parameters.loop_list.things_to_save.std_dev.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'mouse', '\average rolled\'};
+parameters.loop_list.things_to_save.std_dev.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\average rolled\'};
 parameters.loop_list.things_to_save.std_dev.filename= {'correlations_rolled_std.mat'};
 parameters.loop_list.things_to_save.std_dev.variable= {'std_dev{', 'period_iterator', ',1}'}; 
 parameters.loop_list.things_to_save.std_dev.level = 'mouse';
@@ -457,7 +460,9 @@ parameters = rmfield(parameters,'loop_list');
 end
 
 % Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+parameters.loop_list.iterators = {
+                'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
 
@@ -495,7 +500,9 @@ parameters = rmfield(parameters,'loop_list');
 end
 
 % Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+parameters.loop_list.iterators = {
+               'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
 
@@ -634,7 +641,9 @@ parameters = rmfield(parameters,'loop_list');
 end
 
 % Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'};
+parameters.loop_list.iterators = {
+    'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+    'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'};
 parameters.loop_variables.mice_all = parameters.mice_all;
 
 % Reshape parameters.
