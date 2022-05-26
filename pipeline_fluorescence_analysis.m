@@ -123,45 +123,42 @@ parameters.loop_list.things_to_save.segmented_timeseries.level = 'stack';
 RunAnalysis({@SegmentTimeseriesData}, parameters);
 
 
-
 %% Concatenate fluorescence by behavior per mouse 
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
 end
 
-% Skip any files that don't exist. 
-parameters.load_abort_flag = true; 
-
 % Iterators
 parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
-               'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').stacks'}, 'stack_iterator';
-              
+               'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').stacks'}, 'stack_iterator'             
                };
 
 parameters.loop_variables.mice_all = parameters.mice_all;
 
 % Load motorized behavior periods list, put into loop_variables &
 % parameters.
-load([dir_exper 'periods.mat']);
-parameters.loop_variables.periods = periods; 
-parameters.periods = periods;
+% load([dir_exper 'periods.mat']);
+% parameters.loop_variables.periods = periods; 
+% parameters.periods = periods;
 
-% Time ranges
-parameters.loop_list.things_to_load.time_ranges.dir = {[parameters.dir_exper 'behavior\motorized\period instances table format\'], 'mouse', '\', 'day', '\'};
-parameters.loop_list.things_to_load.time_ranges.filename= {'all_periods_', 'stack', '.mat'};
-parameters.loop_list.things_to_load.time_ranges.variable= {'all_periods.time_ranges'}; 
-parameters.loop_list.things_to_load.time_ranges.level = 'stack';
+% Dimension to concatenate the timeseries across.
+parameters.concatDim = 3; 
 
-% Output Values
-parameters.loop_list.things_to_save.segmented_timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\motorized\'], 'mouse', '\', 'day', '\'};
-parameters.loop_list.things_to_save.segmented_timeseries.filename= {'segmented_timeseries_', 'stack', '.mat'};
-parameters.loop_list.things_to_save.segmented_timeseries.variable= {'segmented_timeseries'}; 
-parameters.loop_list.things_to_save.segmented_timeseries.level = 'stack';
+% Input Values
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\motorized\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.data.filename= {'segmented_timeseries_', 'stack', '.mat'};
+parameters.loop_list.things_to_load.data.variable= {'segmented_timeseries'}; 
+parameters.loop_list.things_to_load.data.level = 'stack';
 
-RunAnalysis({@SegmentTimeseriesData}, parameters);
-concatenate_fluorescence(parameters);
+% Output values
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\motorized\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.concatenated_data.filename= {'concatenated_timeseries_all_periods.mat'};
+parameters.loop_list.things_to_save.concatenated_data.variable= {'timeseries'}; 
+parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
+
+RunAnalysis({@ConcatenateData}, parameters);
 
 %% Plot means of fluorescence by behavior per mouse, save figures.
 % Give the y limits to use
