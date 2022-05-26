@@ -492,8 +492,8 @@ parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
 parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances reshaped\'};
-parameters.loop_list.things_to_save.data_evaluated.filename= {'correlations.mat'};
-parameters.loop_list.things_to_save.data_evaluated.variable= {'correlations_reshaped{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_save.data_evaluated.filename= {'values.mat'};
+parameters.loop_list.things_to_save.data_evaluated.variable= {'values{', 'period_iterator', ', 1}'}; 
 parameters.loop_list.things_to_save.data_evaluated.level = 'mouse';
 
 parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'};
@@ -531,8 +531,8 @@ parameters.concatenate_across_cells = false;
 
 % Input 
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances reshaped\'};
-parameters.loop_list.things_to_load.data.filename= {'correlations.mat'};
-parameters.loop_list.things_to_load.data.variable= {'correlations_reshaped{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.filename= {'values.mat'};
+parameters.loop_list.things_to_load.data.variable= {'values{', 'period_iterator', '}'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
@@ -745,6 +745,7 @@ RunAnalysis({@EvaluateOnData}, parameters);
 
 
 %% Divide PC weights into roll windows by behavior periods.
+% Also permute to match correlation dimension structure.
 
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
@@ -768,6 +769,9 @@ parameters.evaluation_instructions = {['a = size(parameters.data,1);' ...
 parameters.toReshape = {'parameters.data'};
 parameters.reshapeDims = {'{parameters.roll_number, parameters.instances, 100}'};
 
+% Permute data instructions/dimensions. To scores, rolls, instances. 
+parameters.DimOrder = [3, 1, 2]; 
+
 % Input 
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
 parameters.loop_list.things_to_load.data.filename= {'PCA_scores_dividedbybehavior_withempties.mat'};
@@ -780,14 +784,15 @@ parameters.loop_list.things_to_load.roll_number.variable= {'roll_number{', 'peri
 parameters.loop_list.things_to_load.roll_number.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.data_reshaped.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
-parameters.loop_list.things_to_save.data_reshaped.filename= {'PCA_scores_dividedbybehavior_withempties_withrolls.mat'};
-parameters.loop_list.things_to_save.data_reshaped.variable= {'scores_withrolls{', 'period_iterator', ', 1}'}; 
-parameters.loop_list.things_to_save.data_reshaped.level = 'mouse';
+parameters.loop_list.things_to_save.data_permuted.dir = {[parameters.dir_exper 'fluorescence analysis\PCA scores individual mouse\'],'transformation', '\', 'mouse', '\instances reshaped\'};
+parameters.loop_list.things_to_save.data_permuted.filename= {'values.mat'};
+parameters.loop_list.things_to_save.data_permuted.variable= {'values{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_save.data_permuted.level = 'mouse';
 
-parameters.loop_list.things_to_rename = {{'data_evaluated', 'data'}}; 
+parameters.loop_list.things_to_rename = {{'data_evaluated', 'data'}
+                                         {'data_reshaped', 'data'}}; 
 
-RunAnalysis({@EvaluateOnData, @ReshapeData}, parameters);
+RunAnalysis({@EvaluateOnData, @ReshapeData, @PermuteData}, parameters);
 
 %% Average PC scores by behavior (within mice)
 
@@ -806,23 +811,23 @@ parameters.loop_list.iterators = {
 parameters.loop_variables.periods = periods_bothConditions; 
 
 % 
-parameters.averageDim = 2;
+parameters.averageDim = 3;
 
 % Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
-parameters.loop_list.things_to_load.data.filename= {'PCA_scores_dividedbybehavior_withempties_withrolls.mat'};
-parameters.loop_list.things_to_load.data.variable= {'scores_withrolls{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA scores individual mouse\'],'transformation', '\', 'mouse', '\instances reshaped\'};
+parameters.loop_list.things_to_load.data.filename= {'values.mat'};
+parameters.loop_list.things_to_load.data.variable= {'values{', 'period_iterator', ', 1}'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
-parameters.loop_list.things_to_save.average.filename= {'PCA_scores_dividedbybehavior_average.mat'};
-parameters.loop_list.things_to_save.average.variable= {'scores_average{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\PCA scores individual mouse\'],'transformation', '\', 'mouse', '\instances reshaped\'};
+parameters.loop_list.things_to_save.average.filename= {'values_average.mat'};
+parameters.loop_list.things_to_save.average.variable= {'values_average{', 'period_iterator', ', 1}'}; 
 parameters.loop_list.things_to_save.average.level = 'mouse';
 
-parameters.loop_list.things_to_save.std_dev.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
-parameters.loop_list.things_to_save.std_dev.filename= {'PCA_scores_dividedbybehavior_std.mat'};
-parameters.loop_list.things_to_save.std_dev.variable= {'scores_std{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_save.std_dev.dir = {[parameters.dir_exper 'fluorescence analysis\PCA scores individual mouse\'],'transformation', '\', 'mouse', '\instances reshaped\'};
+parameters.loop_list.things_to_save.std_dev.filename= {'values_std.mat'};
+parameters.loop_list.things_to_save.std_dev.variable= {'values_std{', 'period_iterator', ', 1}'}; 
 parameters.loop_list.things_to_save.std_dev.level = 'mouse';
 
 RunAnalysis({@AverageData}, parameters);
