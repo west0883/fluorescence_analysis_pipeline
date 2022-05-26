@@ -21,7 +21,7 @@ function [parameters] = ExtractFluorescenceTimeseries(parameters)
 
             % Apply mask to sources (for right now assumes different
             % sources in 3rd dimension)
-            holder = reshape(parameters.sources, parameters.pixels(1) * parameters.pixels(2), []);
+            holder = reshape(parameters.sources, parameters.yDim * parameters.xDim, []);
             parameters.sources_masked = holder(parameters.indices_of_mask, :);
     
         else
