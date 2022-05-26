@@ -21,7 +21,7 @@ function [parameters] = VisualizeAverageRolledData(parameters)
     [subplot_rows, subplot_columns] = OptimizeSubplotNumbers(numel(indices));
 
     % Find if this is a PC score condition.
-    if any(contains(parameters.values(1:numel(parameters.values)/2), 'PCA scores'))
+    if any(contains(parameters.values(1:numel(parameters.values)/2), 'PCA individual mouse')) || any(contains(parameters.values(1:numel(parameters.values)/2), 'PCA across mice'))
         pc_flag = true;
     else
         pc_flag = false;
@@ -34,11 +34,9 @@ function [parameters] = VisualizeAverageRolledData(parameters)
     end
 
     % Color range based on fisher & pc flags.
-    if pc_flag & fisher_flag
+    if pc_flag 
         c_range = [-2 2];
-    elseif pc_flag & ~fisher_flag
-        c_range = [-1 1];
-    elseif ~pc_flag & fisher_flag
+    elseif ~pc_flag && fisher_flag
         c_range = [ 0.5 1.5];
     else
         c_range = [0.5 1];
@@ -75,7 +73,7 @@ function [parameters] = VisualizeAverageRolledData(parameters)
          if indices(i) <= size(parameters.periods_nametable,1)
 
              % Include other name values.
-             holder = [parameters.periods_nametable{indices(i), 3:2:12}];
+             holder = [parameters.periods_nametable{indices(i), 2:6}];
              title(strjoin(holder, ', ' ));
          end
          
