@@ -179,6 +179,9 @@ parameters.loop_variables.periods = periods;
 
 parameters.loop_variables.mice_all = parameters.mice_all;
 
+% Dimension to average across
+parameters.averageDim = 3; 
+
 % Input 
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\motorized\'], 'mouse', '\'};
 parameters.loop_list.things_to_load.data.filename= {'concatenated_timeseries_all_periods.mat'};
@@ -187,18 +190,63 @@ parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
 parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\motorized\'], 'mouse', '\'};
-parameters.loop_list.things_to_save.average.filename= {'average_timeseries_all_periods.mat'};
-parameters.loop_list.things_to_save.average.variable= {'timeseries{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_save.average.filename= {'average_timeseries_all_periods_mean.mat'};
+parameters.loop_list.things_to_save.average.variable= {'average{', 'period_iterator', ',1}'}; 
 parameters.loop_list.things_to_save.average.level = 'mouse';
 
+parameters.loop_list.things_to_save.std_dev.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\motorized\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.std_dev.filename= {'average_timeseries_all_periods_std.mat'};
+parameters.loop_list.things_to_save.std_dev.variable= {'std_dev{', 'period_iterator', ',1}'}; 
+parameters.loop_list.things_to_save.std_dev.level = 'mouse';
 
 RunAnalysis({@AverageData}, parameters);
 
-%% Plot average fluorescence across mice 
-% Give the y limits to use
-parameters.ylim = [-100 150];
-plot_average_fluorescence_across_mice(parameters);
+%% Roll data 
 
-%% Plot all types of similar warning periods together (accels, decels, maintaining at walking, stops)
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
 
-average_similar_warning_periods(parameters);
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods.condition'}, 'period_iterator';            
+               };
+
+% Load motorized behavior periods list, put into loop_variables 
+load([parameters.dir_exper 'periods_nametable.mat']);
+parameters.loop_variables.periods = periods; 
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+
+% Dimension to roll across (time dimension). Will automatically add new
+% data to the last + 1 dimension. 
+parameters.rollDim = 1; 
+
+% Window and step sizes (in frames)
+parameters.windowSize = 20;
+parameters.stepSize = 5; 
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\motorized\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.filename= {'concatenated_timeseries_all_periods.mat'};
+parameters.loop_list.things_to_load.data.variable= {'timeseries{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.data_rolled.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\motorized\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.data_rolled.filename= {'timeseries_rolled.mat'};
+parameters.loop_list.things_to_save.data_rolled.variable= {'timeseries_rolled{', 'period_iterator', ',1}'}; 
+parameters.loop_list.things_to_save.data_rolled.level = 'mouse';
+
+parameters.loop_list.things_to_save.roll_number.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\motorized\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.roll_number.filename= {'roll_number.mat'};
+parameters.loop_list.things_to_save.roll_number.variable= {'roll_number{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_save.roll_number.level = 'mouse';
+
+RunAnalysis({@RollData}, parameters);
+
+%% Correlate data
+
+
+
