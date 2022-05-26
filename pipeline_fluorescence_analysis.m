@@ -248,5 +248,38 @@ RunAnalysis({@RollData}, parameters);
 
 %% Correlate data
 
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
 
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods.condition'}, 'period_iterator';            
+               };
 
+% Load motorized behavior periods list, put into loop_variables 
+load([parameters.dir_exper 'periods_nametable.mat']);
+parameters.loop_variables.periods = periods; 
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+
+% Dimension to correlate across (dimensions where different sources are). 
+parameters.sourceDim = 2; 
+
+% Time dimension (the dimension of the timeseries that will be correlated)
+parameters.timeDim = 1; 
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\motorized\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.filename= {'timeseries_rolled.mat'};
+parameters.loop_list.things_to_load.data.variable= {'timeseries_rolled{', 'period_iterator', ',1}'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.correlation.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\motorized\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.correlation.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
+parameters.loop_list.things_to_save.correlation.variable= {'correlations'}; 
+parameters.loop_list.things_to_save.correlation.level = 'period';
+
+RunAnalysis({@CorrelateTimeseriesData}, parameters);
