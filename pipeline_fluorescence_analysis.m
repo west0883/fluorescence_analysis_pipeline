@@ -678,7 +678,7 @@ for i = 1:numel(transformations)
     sgtitle([mouse ', ' transformation]);
 end 
 
-%% Divide PC weights into behavior periods. (just within one mouse for now)
+%% Individual mice-- Divide PC weights into behavior periods. (just within one mouse for now)
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
@@ -714,7 +714,7 @@ parameters.loop_list.things_to_save.data_divided.level = 'mouse';
 
 RunAnalysis({@DivideData}, parameters);
 
-%% Add empty behavior spaces back into the divided PCA scores. 
+%% Individual mice-- Add empty behavior spaces back into the divided PCA scores. 
 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
@@ -751,8 +751,7 @@ parameters.loop_list.things_to_save.data_evaluated.level = 'mouse';
 
 RunAnalysis({@EvaluateOnData}, parameters);
 
-
-%% Divide PC weights into roll windows by behavior periods.
+%% Individual mice-- Divide PC weights into roll windows by behavior periods.
 % Also permute to match correlation dimension structure.
 
 % Always clear loop list first. 
@@ -802,11 +801,121 @@ parameters.loop_list.things_to_rename = {{'data_evaluated', 'data'}
 
 RunAnalysis({@EvaluateOnData, @ReshapeData, @PermuteData}, parameters);
 
-%% Concatenate ACROSS MICE, motorized & spontaneous (for PCA)
-% Include weights so each mouse is contributing roughly equally to overall
-% amount of data. 
+%% Across mice -- Count amount of data from each mouse for PCA observation weights.
+% Don't need to do for both transformations, don't need to even load in the
+% data.
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';           
+               };
+
+parameters.concatDim = 1; 
+
+parameters.evaluation_instructions = {
+                                      ['data_evaluated = size(parameters.data, "correlations_concatenated",2);'],
+                                      [],
+                                      ['data_evaluated = mean(parameters.concatenated_data) ./ parameters.concatenated_data; ']
+                                       };
+
+% Input
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\not transformed\'], 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
+parameters.loop_list.things_to_load.data.variable= {}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+parameters.loop_list.things_to_load.data.load_function = @matfile;
+
+% Output
+parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\weights for PCA\']};
+parameters.loop_list.things_to_save.data_evaluated.filename= {'number_correlations_bymouse.mat'};
+parameters.loop_list.things_to_save.data_evaluated.variable= {'numbers'}; 
+parameters.loop_list.things_to_save.data_evaluated.level = 'end';
+
+parameters.loop_list.things_to_rename = {{'data_evaluated', 'data'};
+                                          {}};
+
+RunAnalysis({@EvaluateOnData, @ConcatenateData, @EvaluateOnData}, parameters); 
+
+%% Across mice -- replicate PCA weights, concatenated across mice.
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+               'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';           
+               };
+
+parameters.concatDim = 2; 
+
+parameters.toReplicate = {'parameters.data'};
+parameters.replicateDims = {'[size(parameters.reps, "correlations_concatenated",2), 1]'};
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\weights for PCA\']};
+parameters.loop_list.things_to_load.data.filename= {'number_correlations_bymouse.mat'};
+parameters.loop_list.things_to_load.data.variable= {'numbers(', 'mouse_iterator', ')'}; 
+parameters.loop_list.things_to_load.data.level = 'transformation';
+
+parameters.loop_list.things_to_load.reps.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\not transformed\'], 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.reps.filename= {'correlations_all_concatenated.mat'};
+parameters.loop_list.things_to_load.reps.variable= {}; 
+parameters.loop_list.things_to_load.reps.level = 'mouse';
+parameters.loop_list.things_to_load.reps.load_function = @matfile;
+
+% Output 
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\concatenated across mice\'};
+parameters.loop_list.things_to_save.concatenated_data.filename= {'weights.mat'};
+parameters.loop_list.things_to_save.concatenated_data.variable= {'weights'}; 
+parameters.loop_list.things_to_save.concatenated_data.level = 'transformation';
+
+parameters.loop_list.things_to_rename = {{'data_replicated', 'data'}};
+
+RunAnalysis({@ReplicateData, @ConcatenateData}, parameters); 
+
+%% Aross mice -- Concatenate ACROSS MICE, motorized & spontaneous (for PCA)
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+               'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';           
+               };
+% Concatenation dimension (post reshaping & removal)
+parameters.concatDim = 2; 
+parameters.concatenate_across_cells = false; 
+
+% Input
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output.
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\concatenated across mice\'};
+parameters.loop_list.things_to_save.concatenated_data.filename= {'correlations_all_concatenated.mat'};
+parameters.loop_list.things_to_save.concatenated_data.variable= {'correlations_concatenated_across_mice'}; 
+parameters.loop_list.things_to_save.concatenated_data.level = 'transformation';
+
+parameters.loop_list.things_to_save.concatenated_origin.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\concatenated across mice\'};
+parameters.loop_list.things_to_save.concatenated_origin.filename= {'correlations_all_concatenated_origin.mat'};
+parameters.loop_list.things_to_save.concatenated_origin.variable= {'concatenation_origin'}; 
+parameters.loop_list.things_to_save.concatenated_origin.level = 'transformation';
+
+RunAnalysis({@ConcatenateData}, parameters);  
 
 %% Run PCA across mice 
+% Include weights so each mouse is contributing roughly equally to overall
+% amount of data. 
 
 %% Split PCA weights back to orginal mouse/behavior/roll/instance IDsize
 
