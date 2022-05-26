@@ -8,67 +8,68 @@ clear all;
 % Create the experiment name.
 parameters.experiment_name='Random Motorized Treadmill';
 
-% Location and filenames of ROI masks (cell array formatting) and
-% variable name (string).
-parameters.ROI_dir_in_base = {['Y:\Sarah\Analysis\Experiments\' parameters.experiment_name '\quick ROIs\']};
-parameters.ROI_input_filename = {'brainOnly_masks_m', 'mouse number', '.mat'}; 
-parameters.ROI_input_variable = 'masks';
-
-% Location and filenames of input data matrices to extract from (cell
-% array) and variable name (string).
-parameters.data_dir_in_base = {['Y:\Sarah\Analysis\Experiments\' parameters.experiment_name '\fully preprocessed stacks\'], 'mouse number', '\', 'day', '\'};
-parameters.input_data_name = {'data', 'stack number', '.mat'}; 
-parameters.data_input_variable = 'data';
-
 % Output directory name bases
 parameters.dir_base='Y:\Sarah\Analysis\Experiments\';
-parameters.dir_exper=[parameters.dir_base parameters.experiment_name '\quick ROI analysis\']; 
-
-% Load list of behavior conditions, pass it into parameters structure
-load([parameters.dir_base parameters.experiment_name '\Behavior_Conditions.mat']);
-parameters.Conditions = Conditions; 
-
-% Set where to find the behavior period segments-- directory, file name, and the variable name.
-parameters.dir_in_segment_base = [parameters.dir_base parameters.experiment_name '\behavior\period instances\all structure format\'];
-parameters.input_segment_name = {'all_periods_', 'stack number', '.mat'}; 
-parameters.input_segment_variable = {'all_periods.', 'period name'}; 
+parameters.dir_exper=[parameters.dir_base parameters.experiment_name '\']; 
 
 % Load mice_all, pass into parameters structure
-load([parameters.dir_base parameters.experiment_name '\mice_all.mat']);
+load([parameters.dir_exper '\mice_all.mat']);
 parameters.mice_all = mice_all;
 
 % ****Change here if there are specific mice, days, and/or stacks you want to work with**** 
-parameters.mice_all(1).days = parameters.mice_all(1).days(1:6);
-parameters.mice_all(2).days = parameters.mice_all(2).days(1:5);
-parameters.mice_all(3).days = parameters.mice_all(3).days(1:5);
-%parameters.mice_all(1).days = parameters.mice_all(1).days(1, 5, 6); 
+parameters.mice_all = parameters.mice_all(1);
 
 % Include stacks from a "spontaneous" field of mice_all?
-parameters.use_spontaneous_also = true;
+parameters.use_spontaneous_also = false;
 
 % Other parameters
 parameters.digitNumber = 2;
 parameters.pixels = [256 256];
 
-% Load names of behavior periods.
-load([parameters.dir_base parameters.experiment_name '\periods.mat']);
-parameters.periods_all = periods; 
-
-% Variable durataion periods in periods_all
-parameters.variable_duration = [37:41 196:200 225:229];
-
-% List names of ROIs, if you want 
-parameters.ROI_names ={'M2 left';
-                       'M2 right';
-                       'M1 left';
-                       'M1 right';
-                       'visual left';
-                       'visual right';
-                       'retrosplenial left';
-                       'retrosplenial right'}; 
 
 %% Run fluorescence extraction. 
-extract_fluorescence_timeseries(parameters);
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
+               'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').stacks'}, 'stack_iterator'};
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+
+% Dimension different sources are in
+parameters.sourcesDim = 3; 
+
+% If the mean timeseries should be weighted by the weights of pixels in the sources (default is uniform mask)
+parameters.weightedMean = true; 
+
+% Input values
+
+% Source masks
+parameters.loop_list.things_to_load.sources.dir = {[parameters.dir_exper 'spatial segmentation\500 SVD components\manual assignments\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.sources.filename= {'sources_reordered.mat'};
+parameters.loop_list.things_to_load.sources.variable= {'sources'};
+parameters.loop_list.things_to_load.sources.level = 'mouse';
+
+% Preprocessed fluorescence data videos
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'preprocessing\fully preprocessed stacks\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.data.filename= {'data', 'stack', '.mat'};
+parameters.loop_list.things_to_load.data.variable= {'data'}; 
+parameters.loop_list.things_to_load.data.level = 'stack';
+
+% Brain masks to apply to sources, if necessary
+parameters.loop_list.things_to_load.indices_of_mask.dir = {[parameters.dir_exper 'preprocessing\masks\']};
+parameters.loop_list.things_to_load.indices_of_mask.filename= {'masks_m', 'mouse', '.mat'};
+parameters.loop_list.things_to_load.indices_of_mask.variable= {'indices_of_mask'}; 
+parameters.loop_list.things_to_load.indices_of_mask.level = 'mouse';
+
+% Output values. 
+parameters.loop_list.things_to_save.timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\timeseries\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_save.timeseries.filename= {'timeseries', 'stack', '.mat'};
+parameters.loop_list.things_to_save.timeseries.variable= {'timeseries'}; 
+parameters.loop_list.things_to_save.timeseries.level = 'stack';
+
+% Run 
+RunAnalysis({@ExtractFluorescenceTimeseries}, parameters);
 
 %% Segment fluorescence by behavior period
 segment_fluorescence(parameters);
@@ -90,4 +91,5 @@ parameters.ylim = [-100 150];
 plot_average_fluorescence_across_mice(parameters);
 
 %% Plot all types of similar warning periods together (accels, decels, maintaining at walking, stops)
+
 average_similar_warning_periods(parameters);
