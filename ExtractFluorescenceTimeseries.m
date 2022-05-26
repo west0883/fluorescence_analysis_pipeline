@@ -9,25 +9,8 @@ function [parameters] = ExtractFluorescenceTimeseries(parameters)
      % Announce what extraction you're on.
      MessageToUser('Extracting ', parameters);
 
-     % If no masked sources yet, 
-     if ~isfield(parameters, 'sources_masked')
-
-        % If there are masks to apply 
-        if isfield(parameters, 'indices_of_mask')
-
-            % Apply mask to sources (for right now assumes different
-            % sources in 3rd dimension)
-            holder = reshape(parameters.sources, parameters.yDim * parameters.xDim, []);
-            parameters.sources_masked = holder(parameters.indices_of_mask, :);
-    
-        else
-            % Assign masked sources just as the inputted sources
-            parameters.sources_masked = parameters.sources; 
-        end
-     end 
-
      % Make sure data & source dimensions agree.
-     if size(parameters.data, 1) ~= size(parameters.sources_masked, 1)
+     if size(parameters.data, 1) ~= size(parameters.sources, 1)
         error('Make sure your data and sources are inputted with pixels in first dimensions.');
      end 
 
@@ -35,11 +18,11 @@ function [parameters] = ExtractFluorescenceTimeseries(parameters)
 
      % Weighted
      if isfield(parameters, 'weightedMean') && parameters.weightedMean
-        parameters.timeseries = parameters.data'*parameters.sources_masked ./sum(parameters.sources_masked,1);
+        parameters.timeseries = parameters.data'*parameters.sources ./sum(parameters.sources,1);
      
      % Not weighted.
      else
-         parameters.timeseries = parameters.data' * (parameters.sources_masked > 0); 
+         parameters.timeseries = parameters.data' * (parameters.sources > 0); 
      end
 
 end
