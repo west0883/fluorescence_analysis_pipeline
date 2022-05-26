@@ -819,3 +819,18 @@ Zpca_reshaped = reshape(Zpca', 29,29, 20);
 
 figure; for i = 1:20; subplot(4,5,i); imagesc(Zpca_reshaped(:,:,i)); caxis([-30 30]); colorbar; end;
 sgtitle('PCA motorized & spontaneous together');
+
+%% a different function, which reports the variace explained
+
+[coeff,score,latent,tsquared,explained,mu] = pca(correlations_concatenated');
+pcs_reshaped = reshape(coeff,29, 29, 841);
+
+figure; for i = 1:20; subplot(4,5,i); imagesc(pcs_reshaped(:,:,i)); caxis([-0.05 0.05]); colorbar; end;
+%sgtitle('PCA motorized & spontaneous together');
+
+figure; plot(explained(1:100));
+
+figure; imagesc(score(:,1:20)');
+colorbar; caxis([-10 10]);
+
+%% Run PCA with RunAnalysis
