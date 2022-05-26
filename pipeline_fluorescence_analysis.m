@@ -11,7 +11,7 @@ parameters.experiment_name='Random Motorized Treadmill';
 % Location and filenames of ROI masks (cell array formatting) and
 % variable name (string).
 parameters.ROI_dir_in_base = {['Y:\Sarah\Analysis\Experiments\' parameters.experiment_name '\quick ROIs\']};
-parameters.ROI_input_filename = {'quickROIs_m', 'mouse number', '.mat'}; 
+parameters.ROI_input_filename = {'brainOnly_masks_m', 'mouse number', '.mat'}; 
 parameters.ROI_input_variable = 'masks';
 
 % Location and filenames of input data matrices to extract from (cell
@@ -33,8 +33,8 @@ load([parameters.dir_base parameters.experiment_name '\mice_all.mat']);
 parameters.mice_all = mice_all;
 
 % ****Change here if there are specific mice, days, and/or stacks you want to work with**** 
-parameters.mice_all = parameters.mice_all(1);
-parameters.mice_all(1).days = parameters.mice_all(1).days(3); 
+parameters.mice_all = parameters.mice_all(2:3);
+%parameters.mice_all(1).days = parameters.mice_all(1).days(1, 5, 6); 
 
 % Other parameters
 parameters.digitNumber = 2;

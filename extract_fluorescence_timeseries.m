@@ -49,11 +49,11 @@ function [] = extract_fluorescence_timeseries(parameters)
                 
                 % Extract mean timeseries.
                 disp('Extracting');
-                timeseries = data'*masks;
+                timeseries = data'*masks ./sum(masks,1);
                 
-                % Detrend mean timeseries 
-                disp('Detrending');
-                timeseries = detrend(timeseries); 
+%                 % Detrend mean timeseries 
+%                 disp('Detrending');
+%                 timeseries = detrend(timeseries); 
                 
                 % Save timeseries. 
                 save([dir_out 'timeseries' stack_number '.mat'], 'timeseries', '-v7.3'); 
