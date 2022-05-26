@@ -602,31 +602,36 @@ parameters.loop_list.things_to_save.results.level = 'mouse';
 
 RunAnalysis({@PCA_forRunAnalysis}, parameters);
 
-%%  quickly plot some PCs
-mouse = '1087';
-components_to_plot = 20; 
-number_of_sources = 32;
-indices = find(tril(ones(number_of_sources), -1));
-for i = 1:numel(transformations)
-    transformation = transformations{i};
-    
-    load(['Y:\Sarah\Analysis\Experiments\Random Motorized Treadmill\fluorescence analysis\PCA individual mouse\' transformation '\' mouse '\PCA_results.mat']);
-   
-    figure;
-    for componenti = 1:components_to_plot
-        holder = NaN(number_of_sources, number_of_sources);
-        holder(indices) = PCA_results.components(:,componenti);
-        subplot(4,5,componenti); imagesc(holder); caxis([-0.1  0.1])
-        %xticks([]); yticks([]);
+%%  Individual mice -- Plot some PCs
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
 
-    end
-    sgtitle([mouse ', ' transformation]);
+% Iterators
+parameters.loop_list.iterators = {
+    'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+    'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'};
 
-    figure; imagesc(PCA_results.scores(:, 1:10)'); colorbar; caxis([-10 10]);
-    xticks([]); yticks([]);
-    sgtitle([mouse ', ' transformation]);
-end 
+parameters.components_to_plot = 1:35; 
+parameters.number_of_sources = 32;
+parameters.color_range = [-0.1 0.1];
 
+% Input 
+parameters.loop_list.things_to_load.components.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse' '\'};
+parameters.loop_list.things_to_load.components.filename= {'PCA_results.mat'};
+parameters.loop_list.things_to_load.components.variable= {'PCA_results.components'}; 
+parameters.loop_list.things_to_load.components.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.fig.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse' '\'};
+parameters.loop_list.things_to_save.fig.filename= {'first_35_PCs.fig'};
+parameters.loop_list.things_to_save.fig.variable= {'fig'}; 
+parameters.loop_list.things_to_save.fig.level = 'mouse';
+
+RunAnalysis({@PlotPCs}, parameters);
+
+close all;
 %% Individual mice-- Divide PC weights into behavior periods. (just within one mouse for now)
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
@@ -900,6 +905,36 @@ parameters.loop_list.things_to_save.results.variable = {'PCA_results'};
 parameters.loop_list.things_to_save.results.level = 'transformation';
 
 RunAnalysis({@PCA_forRunAnalysis}, parameters);
+
+%% Across mice -- Plot some PCs
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+    'transformation', {'loop_variables.transformations'}, 'transformation_iterator'};
+
+parameters.components_to_plot = 1:35; 
+parameters.number_of_sources = 32;
+parameters.color_range = [-0.1 0.1];
+
+% Input 
+parameters.loop_list.things_to_load.components.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\' };
+parameters.loop_list.things_to_load.components.filename= {'PCA_results.mat'};
+parameters.loop_list.things_to_load.components.variable= {'PCA_results.components'}; 
+parameters.loop_list.things_to_load.components.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.fig.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\'};
+parameters.loop_list.things_to_save.fig.filename= {'first_35_PCs.fig'};
+parameters.loop_list.things_to_save.fig.variable= {'fig'}; 
+parameters.loop_list.things_to_save.fig.level = 'mouse';
+
+RunAnalysis({@PlotPCs}, parameters);
+
+close all;
 
 %% Split PCA weights back to orginal mouse/behavior/roll/instance
 
