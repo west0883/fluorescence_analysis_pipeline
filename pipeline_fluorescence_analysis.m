@@ -616,9 +616,14 @@ for transi = 1:numel(transformations)
     sgtitle([mouse ', ' transformation]);
 end
 
-%% (just across 1 mouse for now) Run PCA with RunAnalysis -- both motorized & spontaneus
+%% (just across 1 mouse) Run PCA with RunAnalysis -- both motorized & spontaneous
+% Would be good to have PCs from individual mice to refer to-- to help
+% figure out if ICs seem to be labeled to similar nodes across mice.
 % DOES remove mean before PCA, as defualt of pca.m function.
 % Use "reshape" as a trick to get only the indices you want, first. 
+
+% Re-weight matrics based on spontaneous data %? Or the % of time spend
+% walking in spontaneous?
 
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
@@ -663,7 +668,7 @@ for i = 1:numel(transformations)
         holder = NaN(number_of_sources, number_of_sources);
         holder(indices) = PCA_results.components(:,componenti);
         subplot(4,5,componenti); imagesc(holder); caxis([-0.1  0.1])
-        xticks([]); yticks([]);
+        %xticks([]); yticks([]);
 
     end
     sgtitle([mouse ', ' transformation]);
@@ -797,206 +802,9 @@ parameters.loop_list.things_to_rename = {{'data_evaluated', 'data'}
 
 RunAnalysis({@EvaluateOnData, @ReshapeData, @PermuteData}, parameters);
 
-%% Average PC scores by behavior (within mice)
-
-% Always clear loop list first. 
-if isfield(parameters, 'loop_list')
-parameters = rmfield(parameters,'loop_list');
-end
-
-% Iterators
-parameters.loop_list.iterators = {
-               'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
-               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
-               'period', {'loop_variables.periods'}, 'period_iterator';            
-               };
-
-parameters.loop_variables.periods = periods_bothConditions; 
-
-% 
-parameters.averageDim = 3;
-
-% Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA scores individual mouse\'],'transformation', '\', 'mouse', '\instances reshaped\'};
-parameters.loop_list.things_to_load.data.filename= {'values.mat'};
-parameters.loop_list.things_to_load.data.variable= {'values{', 'period_iterator', ', 1}'}; 
-parameters.loop_list.things_to_load.data.level = 'mouse';
-
-% Output
-parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\PCA scores individual mouse\'],'transformation', '\', 'mouse', '\instances reshaped\'};
-parameters.loop_list.things_to_save.average.filename= {'values_average.mat'};
-parameters.loop_list.things_to_save.average.variable= {'values_average{', 'period_iterator', ', 1}'}; 
-parameters.loop_list.things_to_save.average.level = 'mouse';
-
-parameters.loop_list.things_to_save.std_dev.dir = {[parameters.dir_exper 'fluorescence analysis\PCA scores individual mouse\'],'transformation', '\', 'mouse', '\instances reshaped\'};
-parameters.loop_list.things_to_save.std_dev.filename= {'values_std.mat'};
-parameters.loop_list.things_to_save.std_dev.variable= {'values_std{', 'period_iterator', ', 1}'}; 
-parameters.loop_list.things_to_save.std_dev.level = 'mouse';
-
-RunAnalysis({@AverageData}, parameters);
-
-
-%%  mean PC scores for continued rest & walk 
-mouse ='1087';
-
-filename = 'values_average.mat';
-
-for transi = 1:numel(transformations)
-
-    transformation = transformations{transi};
-    load(['Y:\Sarah\Analysis\Experiments\Random Motorized Treadmill\fluorescence analysis\PCA scores individual mouse\' transformation '\' mouse '\instances reshaped\' filename])
-
-    scores = [values_average{180} values_average{190} values_average{176} values_average{177} values_average{178} values_average{179} values_average{189}];
-    figure; imagesc(scores(1:20,:));
-    xticklabels({'motor rest', 'spon rest', '1600', '2000', '2400', '2800', 'spon walk'});
-    colorbar;
-    title([mouse ', ' transformation]);
-    savefig(['Y:\Sarah\Analysis\Experiments\Random Motorized Treadmill\fluorescence analysis\PCA scores individual mouse\' transformation '\' mouse '\average_walk_rest_values_first20.fig']);
-
-end
-
-%% Visualize average values across rolled periods that may need to be compared
-% Is all periods except continued rest & walk.
-% Always clear loop list first. 
-if isfield(parameters, 'loop_list')
-parameters = rmfield(parameters,'loop_list');
-end
-
-variable_periods = unique(periods_bothConditions, 'stable');
-variable_periods([26, 27, 29, 30]) = [];
-
-periods_nametable = periods;
-
-% Iterators
-parameters.loop_list.iterators = {
-               'data_type', {'loop_variables.data_type'}, 'data_type_iterator';
-               'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
-               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
-               'period', {'loop_variables.periods'}, 'period_iterator';            
-               };
-
-parameters.loop_variables.periods = variable_periods;
-parameters.periods_nametable = periods_nametable;
-parameters.periods_bothConditions = periods_bothConditions;
-
-% Input
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\'], 'data_type', '\', 'transformation', '\', 'mouse', '\instances reshaped\'};
-parameters.loop_list.things_to_load.data.filename= {'values_average.mat'};
-parameters.loop_list.things_to_load.data.variable= {'values_average'}; 
-parameters.loop_list.things_to_load.data.level = 'mouse';
-
-% Output
-parameters.loop_list.things_to_save.visual_fig.dir = {[parameters.dir_exper 'fluorescence analysis\'], 'data_type', '\', 'transformation', '\', 'mouse', '\average visualization\'};
-parameters.loop_list.things_to_save.visual_fig.filename= {'rolled_average_', 'period', '.fig'};
-parameters.loop_list.things_to_save.visual_fig.variable= {'rolled_average'}; 
-parameters.loop_list.things_to_save.visual_fig.level = 'period';
-
-RunAnalysis({@VisualizeAverageRolledData}, parameters);
-
-close all;
-
-%% Concatenate variable durations together, aligned to front
-% Then average.
-% Try to plot with alpha values proportional to number of instances
-variable_periods = {'m_start', 'm_stop', 'm_accel', 'm_decel', ...
-                    'm_p_nowarn_start', 'm_p_nowarn_stop', 'm_p_nowarn_accel', 'm_p_nowarn_decel'};
-
-for i = 1:numel(variable_periods)
-    parameters.period_indices{i} = find(contains(periods_bothConditions, variable_periods{i}));
-end 
-
-if isfield(parameters, 'loop_list')
-parameters = rmfield(parameters,'loop_list');
-end
-
-% Iterators
-parameters.loop_list.iterators = {
-               'data_type', {'loop_variables.data_type'}, 'data_type_iterator';
-               'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
-               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
-               'period', {'loop_variables.periods'}, 'period_iterator';  
-               'index', {'loop_variables.period_indices{', 'period_iterator', '}'}, 'index_iterator'
-               };
-
-parameters.loop_variables.periods = variable_periods;
-parameters.loop_variables.period_indices = parameters.period_indices; 
-
-% Initialize with an empty matrix of NaNs.(values, ,max roll number)
-parameters.evaluation_instructions = { 'if parameters.values{end} == 1;'...
-                                       'parameters.concatenated_data = [];'...
-                                       'end;'...
-                                      'data_evaluated = NaN(parameters.number_of_values, parameters.max_roll_number, size(parameters.data,3));'...
-                                      'data_evaluated(:, [1:size(parameters.data,2)],:) = parameters.data;'};
-
-parameters.number_of_values = (number_of_sources^2 - number_of_sources)/2;
-parameters.max_roll_number = 24;
-
-parameters.concatDim = 3;
-
-% Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\'], 'data_type', '\', 'transformation', '\', 'mouse', '\instances reshaped\'};
-parameters.loop_list.things_to_load.data.filename= {'values.mat'};
-parameters.loop_list.things_to_load.data.variable= {'values{', 'index', '}'}; 
-parameters.loop_list.things_to_load.data.level = 'mouse';
-
-% Output 
-parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\'],'data_type', '\', 'transformation', '\', 'mouse', '\variable duration averaged\'};
-parameters.loop_list.things_to_save.concatenated_data.filename= {'values_concatenated.mat'};
-parameters.loop_list.things_to_save.concatenated_data.variable= {'values_concatenated{', 'period_iterator', ', 1}'}; 
-parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
-
-parameters.loop_list.things_to_save.concatenated_origin.dir = {[parameters.dir_exper 'fluorescence analysis\'], 'data_type', '\','transformation', '\', 'mouse', '\variable duration averaged\'};
-parameters.loop_list.things_to_save.concatenated_origin.filename= {'values_concatenated_origin.mat'};
-parameters.loop_list.things_to_save.concatenated_origin.variable= {'values_concatenated_origin{', 'period_iterator', ', 1}'}; 
-parameters.loop_list.things_to_save.concatenated_origin.level = 'mouse';
-
-parameters.loop_list.things_to_rename = {{'data_evaluated', 'data'}};
-                                
-RunAnalysis({@EvaluateOnData, @ConcatenateData}, parameters);
-
-%% Average the variable values, counting the number of contributions.
-
-variable_periods = {'m_start', 'm_stop', 'm_accel', 'm_decel', ...
-                    'm_p_nowarn_start', 'm_p_nowarn_stop', 'm_p_nowarn_accel', 'm_p_nowarn_decel'};
-
-if isfield(parameters, 'loop_list')
-parameters = rmfield(parameters,'loop_list');
-end
-
-% Iterators
-parameters.loop_list.iterators = {
-               'data_type', {'loop_variables.data_type'}, 'data_type_iterator';
-               'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
-               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
-               'period', {'loop_variables.periods'}, 'period_iterator';  
-               };
-
-parameters.loop_variables.periods = variable_periods;
-
-% Count & save number of non- NaNs
-parameters.evaluation_instructions = { 'data_evaluated = sum(~isnan(parameters.data), 3);'}; 
-parameters.averageDim = 3;
-                        
-% Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\'],'data_type', '\','transformation', '\', 'mouse', '\variable duration averaged\'};
-parameters.loop_list.things_to_load.data.filename= {'values_concatenated.mat'};
-parameters.loop_list.things_to_load.data.variable= {'values_concatenated{', 'period_iterator', ', 1}'}; 
-parameters.loop_list.things_to_load.data.level = 'mouse';
-
-% Output 
-parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'fluorescence analysis\'], 'data_type', '\', 'transformation', '\', 'mouse', '\variable duration averaged\'};
-parameters.loop_list.things_to_save.data_evaluated.filename= {'values_number.mat'};
-parameters.loop_list.things_to_save.data_evaluated.variable= {'values_number{', 'period_iterator', ', 1}'}; 
-parameters.loop_list.things_to_save.data_evaluated.level = 'mouse';
-
-parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\'], 'data_type', '\','transformation', '\', 'mouse', '\variable duration averaged\'};
-parameters.loop_list.things_to_save.average.filename= {'values_averaged.mat'};
-parameters.loop_list.things_to_save.average.variable= {'values_average{', 'period_iterator', ', 1}'}; 
-parameters.loop_list.things_to_save.average.level = 'mouse';
-
-RunAnalysis({@EvaluateOnData, @AverageData}, parameters);
-
 %% Concatenate ACROSS MICE, motorized & spontaneous (for PCA)
+% Include weights so each mouse is contributing roughly equally to overall
+% amount of data. 
 
 %% Run PCA across mice 
 
