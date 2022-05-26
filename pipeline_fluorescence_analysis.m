@@ -43,6 +43,9 @@ parameters.mice_all(2).days = parameters.mice_all(2).days(1:5);
 parameters.mice_all(3).days = parameters.mice_all(3).days(1:5);
 %parameters.mice_all(1).days = parameters.mice_all(1).days(1, 5, 6); 
 
+% Include stacks from a "spontaneous" field of mice_all?
+parameters.use_spontaneous_also = true;
+
 % Other parameters
 parameters.digitNumber = 2;
 parameters.pixels = [256 256];

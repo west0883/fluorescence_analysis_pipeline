@@ -21,9 +21,6 @@ function [] = average_fluorescence_across_mice(parameters)
     % Output variable name
     parameters.output_variable_name = {'average_fluorescence_across_mice'}; 
     
-    % For now, skip continued rest and walkings
-    parameters.periods_all(parameters.variable_duration) = [];
-    
     % Tell user where data is being saved
     disp(['Data saved in ' parameters.dir_out_base]); 
 

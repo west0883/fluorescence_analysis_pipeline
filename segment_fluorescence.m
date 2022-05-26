@@ -2,7 +2,7 @@
 % Sarah West
 % 12/9/21
 
-function [] = segment_fluorescence_motorizedTreadmill(parameters)
+function [] = segment_fluorescence(parameters)
 
     % Establish input directory for fluorescence timeseries
     parameters.dir_in_data_base = [parameters.dir_exper 'extracted fluorescence timeseries\'];

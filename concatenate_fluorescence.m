@@ -31,9 +31,6 @@ function [] = concatenate_fluorescence(parameters)
     % Tell user where data is being saved
     disp(['Data saved in ' parameters.dir_out_base]); 
     
-    % For now, skip continued rest and walkings
-    parameters.periods_all(parameters.variable_duration) = [];
-    
     % Put all periods into a single cell array. 
     % If user asked for full onsets/full offsets, add those to the save list, too. 
     if isfield(parameters, 'full_transition_flag')  

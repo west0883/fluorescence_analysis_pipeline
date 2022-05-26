@@ -25,9 +25,6 @@ function [] = plot_average_fluorescence_permouse(parameters)
     % Output directory name 
     parameters.dir_out_base = [parameters.dir_exper 'all fluorescence timeseries per mouse\mean plots\'];
     
-    % For now, skip continued rest and walkings
-    parameters.periods_all(parameters.variable_duration) = [];
-    
     % Tell user where data is being saved
     disp(['Data saved in ' parameters.dir_out_base]); 
     
@@ -44,6 +41,7 @@ function [] = plot_average_fluorescence_permouse(parameters)
         for periodi = 1:size(parameters.periods_all, 1) 
             period = parameters.periods_all{periodi};
             
+            try 
             % load corresponding data.
             load([dir_in 'all_timeseries_' period '.mat']);
             
@@ -74,6 +72,9 @@ function [] = plot_average_fluorescence_permouse(parameters)
             % Save
             savefig([dir_out 'mean_' period '.fig']);
             close all; 
+            catch 
+                continue 
+            end
         end
     end
 end 
