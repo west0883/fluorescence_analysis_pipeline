@@ -551,7 +551,7 @@ parameters.loop_list.iterators = {
     'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
     'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'};
 
-parameters.components_to_plot = 1:35; 
+parameters.components_to_plot = 1:20; 
 parameters.number_of_sources = 32;
 parameters.color_range = [-0.1 0.1];
 
@@ -563,7 +563,7 @@ parameters.loop_list.things_to_load.components.level = 'mouse';
 
 % Output
 parameters.loop_list.things_to_save.fig.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse' '\'};
-parameters.loop_list.things_to_save.fig.filename= {['first_' num2str(parameters.components_to_plot(end)) ' _PCs.fig']};
+parameters.loop_list.things_to_save.fig.filename= {['first_' num2str(parameters.components_to_plot(end)) '_PCs.fig']};
 parameters.loop_list.things_to_save.fig.variable= {'fig'}; 
 parameters.loop_list.things_to_save.fig.level = 'mouse';
 
