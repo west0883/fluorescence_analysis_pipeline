@@ -7,13 +7,7 @@ function [parameters] = PCA_forRunAnalysis(parameters)
     
     % If there's a "values" field from RunAnalysis, print updating message
     % for user. 
-    if isfield(parameters, 'values')
-        message = ['PCA on '];
-        for dispi = 1:numel(parameters.values)/2
-           message = [message ', ' parameters.values{dispi}];
-        end
-        disp(message); 
-    end
+    MessageToUser('PCA on')
 
     % Pull out data matrix for easier manipulation
     data = parameters.data; 
