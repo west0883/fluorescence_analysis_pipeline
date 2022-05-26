@@ -26,7 +26,20 @@ parameters.use_spontaneous_also = true;
 parameters.digitNumber = 2;
 parameters.pixels = [256 256];
 
+% Load names of motorized periods
+load([parameters.dir_exper 'periods_nametable.mat']);
+
+
 periods_spontaneous = {'rest';'walk';'startwalk';'prewalk';'stopwalk';'postwalk';'full_onset';'full_offset'};
+
+% Create a "conditions" structure to hold period name info for spontaneous
+% and motorized.
+% Most/all of the code in this pipeline is done with period iterators, so
+% repeating names is okay.
+conditions(1).name = 'motorized';
+conditions(1).periods = periods.condition;
+conditions(2).name = 'spontaneous';
+conditions(2).periods = periods_spontaneous;
 
 %% Run fluorescence extraction. 
 
@@ -80,8 +93,6 @@ RunAnalysis({@ExtractFluorescenceTimeseries}, parameters);
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
 end
-% Load names of periods
-load([parameters.dir_exper 'periods_nametable.mat']);
 
 % Iterators
 parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
@@ -163,20 +174,38 @@ parameters.loop_list.things_to_load.time_ranges.variable= {'behavior_periods.', 
 parameters.loop_list.things_to_load.time_ranges.level = 'stack';
 
 % Output Values
+% (Convert to cell format to be compatible with motorized in below code)
 parameters.loop_list.things_to_save.segmented_timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\spontaneous\'], 'mouse', '\', 'day', '\'};
 parameters.loop_list.things_to_save.segmented_timeseries.filename= {'segmented_timeseries_', 'stack', '.mat'};
-parameters.loop_list.things_to_save.segmented_timeseries.variable= {'segmented_timeseries.', 'period'}; 
+parameters.loop_list.things_to_save.segmented_timeseries.variable= {'segmented_timeseries{', 'period_iterator',',1}'}; 
 parameters.loop_list.things_to_save.segmented_timeseries.level = 'stack';
 
 RunAnalysis({@SegmentTimeseriesData}, parameters);
 
+%% Concatenate behavior period cell-format data across motorized & spontaneous
+% Is so you can use a single loop for calculations. Will be useful later if
+% you want to run lists of behavior comparisons and don't want to make different
+% calls when you have different combinations of motorized & spontaneous. 
 
-%% [FROM HERE DOWN YOU CAN COMBINE MOTORIZED & SPONTANOUS SECTIONS BECAUSE THEY 
-% SHARE FOLDER & FILE STRUCTURES. (put period lists in different elements of a
-% structure with condition_iterator saying where to find it, like you do with 
-% days/stacks of mice with mice_all)
-% Just need to make spontaneous the cell format, too. 
 
+% Tell it to concatenate across cells, not within cells. 
+paramaters.concatenate_across_cells = true; 
+
+% Input Values
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\'], 'condition', '\', 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.data.filename= {'segmented_timeseries_', 'stack', '.mat'};
+parameters.loop_list.things_to_load.data.variable= {'segmented_timeseries'}; 
+parameters.loop_list.things_to_load.data.level = 'stack';
+
+% Output values
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\'], 'condition', '\', 'mouse', '\'};
+parameters.loop_list.things_to_save.concatenated_data.filename= {'concatenated_timeseries_all_periods.mat'};
+parameters.loop_list.things_to_save.concatenated_data.variable= {'timeseries'}; 
+parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
+
+RunAnalysis({@ConcatenateData}, parameters);
+%% [FROM HERE DOWN YOU CAN COMBINE MOTORIZED & SPONTANOUS SECTIONS]
+% Because they're concatenated.
 
 %% Concatenate fluorescence by behavior per mouse 
 % Always clear loop list first. 
@@ -185,7 +214,8 @@ parameters = rmfield(parameters,'loop_list');
 end
 
 % Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+parameters.loop_list.iterators = {
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
                'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').stacks'}, 'stack_iterator'             
                };
@@ -207,13 +237,13 @@ if isfield(parameters, 'reshapeDims')
 end
 
 % Input Values
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\motorized\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\'], 'condition', '\', 'mouse', '\', 'day', '\'};
 parameters.loop_list.things_to_load.data.filename= {'segmented_timeseries_', 'stack', '.mat'};
 parameters.loop_list.things_to_load.data.variable= {'segmented_timeseries'}; 
 parameters.loop_list.things_to_load.data.level = 'stack';
 
 % Output values
-parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\motorized\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\'], 'condition', '\', 'mouse', '\'};
 parameters.loop_list.things_to_save.concatenated_data.filename= {'concatenated_timeseries_all_periods.mat'};
 parameters.loop_list.things_to_save.concatenated_data.variable= {'timeseries'}; 
 parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
@@ -228,8 +258,10 @@ parameters = rmfield(parameters,'loop_list');
 end
 
 % Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
-               'period', {'loop_variables.periods.condition'}, 'period_iterator';
+parameters.loop_list.iterators = {
+                'condition', {'loop_variables.conditions(:).name'}, 'condition_iterator';
+                'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+                'period', {'loop_variables.conditions(', 'conditon_iterator', ').periods(:)'}, 'period_iterator';
                            
                };
 
@@ -483,250 +515,6 @@ RunAnalysis({@ReshapeData, @ConcatenateData}, parameters);
 
 %%  Run PCA ( not saving yet);
 
-% [Zpca, U, mu, eigVecs] = PCA(correlations_concatenated',20);
-% 
-% Zpca_reshaped = reshape(Zpca', 29,29, 20); 
-% 
-% figure; for i = 1:20; subplot(4,5,i); imagesc(Zpca_reshaped(:,:,i)); caxis([-30 30]); colorbar; end;
-% sgtitle('PCA');
-
-%% *******************************************
-% ********* SPONTANEOUS DATA ANALYSIS ********
-% ********************************************
-%% SPONTANEOUS-- Concatenate fluorescence by behavior per mouse 
-% Always clear loop list first. 
-if isfield(parameters, 'loop_list')
-parameters = rmfield(parameters,'loop_list');
-end
-
-% Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
-               'period', {'loop_variables.periods_spontaneous{:}'}, 'period_iterator';
-               'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
-               'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').spontaneous'}, 'stack_iterator';             
-                };
-
-parameters.loop_variables.mice_all = parameters.mice_all;
-parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
-
-% Dimension to concatenate the timeseries across.
-parameters.concatDim = 3; 
-
-% Clear any reshaping instructions 
-if isfield(parameters, 'reshapeDims')
-    parameters = rmfield(parameters,'reshapeDims');
-end
-
-% Input Values
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\spontaneous\'], 'mouse', '\', 'day', '\'};
-parameters.loop_list.things_to_load.data.filename= {'segmented_timeseries_', 'stack', '.mat'};
-parameters.loop_list.things_to_load.data.variable= {'segmented_timeseries.', 'period'}; 
-parameters.loop_list.things_to_load.data.level = 'stack';
-
-% Output values
-parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\spontaneous\'], 'mouse', '\'};
-parameters.loop_list.things_to_save.concatenated_data.filename= {'concatenated_timeseries_', 'period', '.mat'};
-parameters.loop_list.things_to_save.concatenated_data.variable= {'timeseries'}; 
-parameters.loop_list.things_to_save.concatenated_data.level = 'period';
-
-RunAnalysis({@ConcatenateData}, parameters);
-
-%% SPONTANEOUS -- Roll data
-
-% Always clear loop list first. 
-if isfield(parameters, 'loop_list')
-parameters = rmfield(parameters,'loop_list');
-end
-
-% Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
-               'period', {'loop_variables.periods_spontaneous{:}'}, 'period_iterator'             
-                };
-
-parameters.loop_variables.mice_all = parameters.mice_all;
-parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
-
-%Dimension to roll across (time dimension). Will automatically add new
-% data to the last + 1 dimension. 
-parameters.rollDim = 1; 
-
-% Window and step sizes (in frames)
-parameters.windowSize = 20;
-parameters.stepSize = 5; 
-
-% Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\spontaneous\'], 'mouse', '\'};
-parameters.loop_list.things_to_load.data.filename= {'concatenated_timeseries_', 'period', '.mat'};
-parameters.loop_list.things_to_load.data.variable= {'timeseries'}; 
-parameters.loop_list.things_to_load.data.level = 'period';
-
-% Output
-parameters.loop_list.things_to_save.data_rolled.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\spontaneous\'], 'mouse', '\'};
-parameters.loop_list.things_to_save.data_rolled.filename= {'timeseries_rolled_', 'period', '.mat'};
-parameters.loop_list.things_to_save.data_rolled.variable= {'timeseries_rolled'}; 
-parameters.loop_list.things_to_save.data_rolled.level = 'period';
-
-parameters.loop_list.things_to_save.roll_number.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\spontaneous\'], 'mouse', '\'};
-parameters.loop_list.things_to_save.roll_number.filename= {'roll_number_', 'period', '.mat'};
-parameters.loop_list.things_to_save.roll_number.variable= {'roll_number'}; 
-parameters.loop_list.things_to_save.roll_number.level = 'period';
-
-RunAnalysis({@RollData}, parameters);
-
-%% SPONTANEOUS -- Correlations
-tic
-% Always clear loop list first. 
-if isfield(parameters, 'loop_list')
-parameters = rmfield(parameters,'loop_list');
-end
-
-% Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
-               'period', {'loop_variables.periods_spontaneous{1:end}'}, 'period_iterator'             
-                };
-
-parameters.loop_variables.mice_all = parameters.mice_all;
-parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
-
-% Dimension to correlate across (dimensions where different sources are). 
-parameters.sourceDim = 2; 
-
-% Time dimension (the dimension of the timeseries that will be correlated)
-parameters.timeDim = 1; 
-
-% Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\spontaneous\'], 'mouse', '\'};
-parameters.loop_list.things_to_load.data.filename= {'timeseries_rolled_', 'period', '.mat'};
-parameters.loop_list.things_to_load.data.variable= {'timeseries_rolled'}; 
-parameters.loop_list.things_to_load.data.level = 'period';
-
-% Output
-parameters.loop_list.things_to_save.correlation.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\instances\'};
-parameters.loop_list.things_to_save.correlation.filename= {'correlations_', 'period', '.mat'};
-parameters.loop_list.things_to_save.correlation.variable= {'correlations'}; 
-parameters.loop_list.things_to_save.correlation.level = 'period';
-
-RunAnalysis({@CorrelateTimeseriesData}, parameters);
-toc
-
-%% SPONTANEOUS-- Average correlations 
-
-% Always clear loop list first. 
-if isfield(parameters, 'loop_list')
-parameters = rmfield(parameters,'loop_list');
-end
-
-% Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
-               'period', {'loop_variables.periods_spontaneous{:}'}, 'period_iterator'             
-                };
-
-parameters.loop_variables.mice_all = parameters.mice_all;
-parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
-
-% Dimension to average across
-parameters.averageDim = 3; 
-
-% Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\instances\'};
-parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '.mat'};
-parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
-parameters.loop_list.things_to_load.data.level = 'period';
-
-% Output
-parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\average rolled\'};
-parameters.loop_list.things_to_save.average.filename= {'correlations_average_', 'period', '.mat'};
-parameters.loop_list.things_to_save.average.variable= {'average'}; 
-parameters.loop_list.things_to_save.average.level = 'period';
-
-parameters.loop_list.things_to_save.std_dev.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\average rolled\'};
-parameters.loop_list.things_to_save.std_dev.filename= {'correlations_std_', 'period', '.mat'};
-parameters.loop_list.things_to_save.std_dev.variable= {'std_dev'}; 
-parameters.loop_list.things_to_save.std_dev.level = 'period';
-
-RunAnalysis({@AverageData}, parameters);
-
-%% SPONTANEOUS -- Save reshaped data (2D + roll dimension)
-% You end up using this more than once, so might as well save it.
-% Always clear loop list first. 
-if isfield(parameters, 'loop_list')
-parameters = rmfield(parameters,'loop_list');
-end
-
-% Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
-               'period', {'loop_variables.periods{:}'}, 'period_iterator';            
-               };
-
-% Load motorized behavior periods list, put into loop_variables 
-load([parameters.dir_exper 'periods_nametable.mat']);
-parameters.loop_variables.periods = periods_spontaneous; 
-
-parameters.loop_variables.mice_all = parameters.mice_all;
-
-% Dimensions for reshaping, before removing data & before cnocatenation.
-% Turning it into 2 dims + roll dim. 
-parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), size(parameters.data,3), size(parameters.data, 4) }'};
-
-% Concatenation dimension (post reshaping & removal)
-parameters.concatDim = 2; 
-
-% Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\instances\'};
-parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '.mat'};
-parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
-parameters.loop_list.things_to_load.data.level = 'period';
-
-% Output
-parameters.loop_list.things_to_save.data_reshaped.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\instances reshaped\'};
-parameters.loop_list.things_to_save.data_reshaped.filename= {'correlations_', 'period', '.mat'};
-parameters.loop_list.things_to_save.data_reshaped.variable= {'correlations_reshaped'}; 
-parameters.loop_list.things_to_save.data_reshaped.level = 'period';
-
-RunAnalysis({@ReshapeData}, parameters); 
-
-%% SPONTANEOUS -- Concatenate all correlations together (for PCA or other metrics)
-
-% Always clear loop list first. 
-if isfield(parameters, 'loop_list')
-parameters = rmfield(parameters,'loop_list');
-end
-
-% Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
-               'period', {'loop_variables.periods_spontaneous{:}'}, 'period_iterator'             
-                };
-
-parameters.loop_variables.mice_all = parameters.mice_all;
-parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
-
-% Dimensions for reshaping, before removing data & before cnocatenation.
-% Turning it into 2 dims. 
-parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), []}'};
-
-% Concatenation dimension (post reshaping & removal)
-parameters.concatDim = 2; 
-
-% Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\instances\'};
-parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '.mat'};
-parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
-parameters.loop_list.things_to_load.data.level = 'period';
-
-% Output
-parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\all concatenated\'};
-parameters.loop_list.things_to_save.concatenated_data.filename= {'correlations_all_concatenated.mat'};
-parameters.loop_list.things_to_save.concatenated_data.variable= {'correlations_concatenated'}; 
-parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
-
-% Things to rename/reassign between the two functions (frist column renamed to
-% second column. Pairs for each level. Each row is a level.
-parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'}};
-
-RunAnalysis({@ReshapeData, @ConcatenateData}, parameters); 
-
-%%  SPONTANEOUS-- Run PCA ( not saving yet);
-% 
 % [Zpca, U, mu, eigVecs] = PCA(correlations_concatenated',20);
 % 
 % Zpca_reshaped = reshape(Zpca', 29,29, 20); 
