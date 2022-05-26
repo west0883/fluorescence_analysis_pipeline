@@ -564,70 +564,11 @@ parameters.loop_list.things_to_rename = { %{'data_removed', 'data'};
 
 RunAnalysis({@ReshapeData, @ConcatenateData}, parameters);  
 
-%% Visualize difference in mean continued rest & walk for motorized & spontaneous
-mouse ='1087';
-cmap_corrs = parula(256); 
-cmap_diffs = flipud(cbrewer('div', 'RdBu', 256, 'nearest'));
-c_range_diffs = [-0.3 0.3];
-figure; 
-
-filename = 'correlations_rolled_average.mat';
-
-for transi = 1:numel(transformations)
-
-    transformation = transformations{transi};
-    motor = load([parameters.dir_exper 'fluorescence analysis\correlations\' transformation '\' mouse '\average rolled\' filename]);
-    figure;
-    spon_walk.average = motor.average{190};
-    spon_rest.average = motor.average{189};
-    
-    subplot(2,5,1); imagesc(spon_rest.average);  colorbar; colormap(gca,cmap_corrs); caxis([0 1]);
-    title('spon rest');
-    
-    spon_walk_diff = spon_walk.average - spon_rest.average;
-    subplot(2,5,2); imagesc(spon_walk_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
-    title('diff spon walk');
-    
-    
-    % rest
-    subplot(2,5,6); imagesc(motor.average{180});  colorbar; colormap(gca,cmap_corrs); caxis([0 1]);
-    title('motor rest');
-    
-    % walk 1600
-    motor_walk_diff = motor.average{176} - motor.average{180};
-    subplot(2,5,7); imagesc(motor_walk_diff); colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
-    title('diff motor walk 1600');
-    
-    % walk 2000
-    motor_walk_diff = motor.average{177} - motor.average{180};
-    subplot(2,5,8); imagesc(motor_walk_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
-    title('diff motor walk 2000');
-    
-    % walk 2400
-    motor_walk_diff = motor.average{178} - motor.average{180};
-    subplot(2,5,9); imagesc(motor_walk_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
-    title('diff motor walk 2400');
-    
-    % walk 2800
-    motor_walk_diff = motor.average{179} - motor.average{180};
-    subplot(2,5,10); imagesc(motor_walk_diff); colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
-    title('diff motor walk 2800');
-    
-    motor_rest_diff = motor.average{180} - spon_rest.average;
-    subplot(2,5,5); imagesc(motor_rest_diff);  colorbar; colormap(gca, cmap_diffs); caxis(c_range_diffs);
-    title('diff motor rest - spon rest');
-    
-    sgtitle([mouse ', ' transformation]);
-end
-
 %% (just across 1 mouse) Run PCA with RunAnalysis -- both motorized & spontaneous
 % Would be good to have PCs from individual mice to refer to-- to help
 % figure out if ICs seem to be labeled to similar nodes across mice.
 % DOES remove mean before PCA, as defualt of pca.m function.
 % Use "reshape" as a trick to get only the indices you want, first. 
-
-% Re-weight matrics based on spontaneous data %? Or the % of time spend
-% walking in spontaneous?
 
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
