@@ -582,7 +582,11 @@ parameters.loop_list.iterators = {
 
 % PCA parameters.
 parameters.observationDim = 2;
-parameters.numComponents = (number_of_sources^2 - number_of_sources)/2; %100;
+parameters.numComponents = (number_of_sources^2 - number_of_sources)/2; % Calculate all possible PCs
+parameters.observation_weighted_flag = false;
+parameters.pairwise_flag = false; 
+parameters.variable_weighted_flag = false;
+parameters.algorithem = 'eig';
 
 % Input
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
