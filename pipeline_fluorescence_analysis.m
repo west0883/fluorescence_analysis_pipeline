@@ -568,7 +568,7 @@ parameters.loop_list.things_to_load.components.level = 'mouse';
 
 % Output
 parameters.loop_list.things_to_save.fig.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse' '\'};
-parameters.loop_list.things_to_save.fig.filename= {'first_35_PCs.fig'};
+parameters.loop_list.things_to_save.fig.filename= {['first_' num2str(parameters.components_to_plot(end)) ' _PCs.fig']};
 parameters.loop_list.things_to_save.fig.variable= {'fig'}; 
 parameters.loop_list.things_to_save.fig.level = 'mouse';
 
