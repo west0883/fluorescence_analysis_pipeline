@@ -74,20 +74,15 @@ parameters.weightedMean = true;
 % Input values
 % Source masks
 parameters.loop_list.things_to_load.sources.dir = {[parameters.dir_exper 'spatial segmentation\500 SVD components\manual assignments\'], 'mouse', '\'};
-parameters.loop_list.things_to_load.sources.filename= {'sources_reordered.mat'};
-parameters.loop_list.things_to_load.sources.variable= {'sources'};
+parameters.loop_list.things_to_load.sources.filename= {'sources_reordered_masked.mat'};
+parameters.loop_list.things_to_load.sources.variable= {'sources_masked'};
+
 parameters.loop_list.things_to_load.sources.level = 'mouse';
 % Preprocessed fluorescence data videos
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'preprocessing\fully preprocessed stacks\'], 'mouse', '\', 'day', '\'};
 parameters.loop_list.things_to_load.data.filename= {'data', 'stack', '.mat'};
 parameters.loop_list.things_to_load.data.variable= {'data'}; 
 parameters.loop_list.things_to_load.data.level = 'stack';
-% Brain masks to apply to sources, if necessary. (Source formats need to
-% match the fluorescence data videos formats)
-parameters.loop_list.things_to_load.indices_of_mask.dir = {[parameters.dir_exper 'preprocessing\masks\']};
-parameters.loop_list.things_to_load.indices_of_mask.filename= {'masks_m', 'mouse', '.mat'};
-parameters.loop_list.things_to_load.indices_of_mask.variable= {'indices_of_mask'}; 
-parameters.loop_list.things_to_load.indices_of_mask.level = 'mouse';
 
 % Output values. 
 parameters.loop_list.things_to_save.timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\timeseries\'], 'mouse', '\', 'day', '\'};
