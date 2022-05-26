@@ -5,7 +5,7 @@
 % Called by RunAnalysis, Applies the FisherTransform (arctanh(x)) to 
 % Pearson correlation coefficients.
 
-function parameters = FischerTransform(parameters)
+function parameters = FisherTransform(parameters)
     
     % Tell user what's happening.
     MessageToUser('Transforming', parameters);
