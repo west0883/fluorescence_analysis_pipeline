@@ -834,3 +834,30 @@ figure; imagesc(score(:,1:20)');
 colorbar; caxis([-10 10]);
 
 %% Run PCA with RunAnalysis
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'};
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+
+parameters.observationDim = 2;
+parameters.numComponents = 100;
+
+% Input
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\both conditions concatenated\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.results.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\both conditions concatenated\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.results.filename= {'PCA_results.mat'};
+parameters.loop_list.things_to_save.results.variable= {'PCA_results'}; 
+parameters.loop_list.things_to_save.results.level = 'mouse';
+
+RunAnalysis({@PCA_forRunAnalysis}, parameters);
+
