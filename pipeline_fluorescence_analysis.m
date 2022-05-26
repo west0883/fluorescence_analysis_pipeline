@@ -822,7 +822,7 @@ parameters.concatenate_across_cells = false;
 % Input
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated_mean_removed.mat'};
-parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated'}; 
+parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated_mean_removed'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output.
