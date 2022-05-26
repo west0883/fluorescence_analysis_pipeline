@@ -502,6 +502,10 @@ parameters.loop_list.things_to_rename = { %{'data_removed', 'data'};
 
 RunAnalysis({@ReshapeData, @ConcatenateData}, parameters);  
 
+%% Normalize each mouse's matrices. (across all time points and correlation pairs)
+% It's what Leonardi et all, 2013 do. 
+% Is only useful/meaningful on Fisher transformed, right? 
+
 %% (just across 1 mouse) Run PCA with RunAnalysis -- both motorized & spontaneous
 % Would be good to have PCs from individual mice to refer to-- to help
 % figure out if ICs seem to be labeled to similar nodes across mice.
@@ -693,7 +697,7 @@ close all;
 % 
 % RunAnalysis({@EvaluateOnData, @ReshapeData, @PermuteData}, parameters);
 
-%% Across mice -- remove mean correlation from each mouse's data.
+%% Across mice -- remove mean of each correlation pair from each mouse's data.
 % Will reduce amount of inter-mouse variability in PCA, according to
 % Leonardi et al, 2013. 
 % Always clear loop list first. 
