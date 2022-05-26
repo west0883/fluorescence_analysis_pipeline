@@ -866,5 +866,197 @@ RunAnalysis({@ConcatenateData}, parameters);
 % Include weights so each mouse is contributing roughly equally to overall
 % amount of data. 
 
-%% Split PCA weights back to orginal mouse/behavior/roll/instance IDsize
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
 
+% Iterators
+parameters.loop_list.iterators = {'transformation', {'loop_variables.transformations'}, 'transformation_iterator'};
+
+% PCA parameters.
+parameters.observationDim = 2;
+parameters.numComponents = (number_of_sources^2 - number_of_sources)/2; % Calculate all PCs. 
+parameters.observation_weighted_flag = true; % Use weights by mouse
+parameters.pairwise_flag = true;  % Omit NaNs when calculating covariance between two correlation values
+parameters.variable_weighted_flag = true; % Weight certain correlation values based on how many are missing/NaNs
+parameters.algorithem = 'eig';
+
+% Input
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\concatenated across mice\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated_across_mice'}; 
+parameters.loop_list.things_to_load.data.level = 'transformation';
+
+parameters.loop_list.things_to_load.observation_weights.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\weights\'};
+parameters.loop_list.things_to_load.observation_weights.filename= {'weights_acrossmice.mat'};
+parameters.loop_list.things_to_load.observation_weights.variable= {'weights'}; 
+parameters.loop_list.things_to_load.observation_weights.level = 'transformation';
+
+% Output
+parameters.loop_list.things_to_save.results.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\'};
+parameters.loop_list.things_to_save.results.filename = {'PCA_results.mat'};
+parameters.loop_list.things_to_save.results.variable = {'PCA_results'}; 
+parameters.loop_list.things_to_save.results.level = 'transformation';
+
+RunAnalysis({@PCA_forRunAnalysis}, parameters);
+
+%% Split PCA weights back to orginal mouse/behavior/roll/instance
+
+%% Across mice-- Divide PC scores/loadings back to individual mice 
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+    'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+     };
+
+parameters.loop_variables.periods = periods_bothConditions.condition; 
+
+parameters.fromConcatenateData = true;
+parameters.divideDim = 1; 
+
+% Input 
+parameters.loop_list.things_to_load.division_points.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\concatenated across mice\'};
+parameters.loop_list.things_to_load.division_points.filename= {'correlations_all_concatenated_origin.mat'};
+parameters.loop_list.things_to_load.division_points.variable= {'concatenation_origin'}; 
+parameters.loop_list.things_to_load.division_points.level = 'transformation';
+
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\'};
+parameters.loop_list.things_to_load.data.filename= {'PCA_results.mat'};
+parameters.loop_list.things_to_load.data.variable= {'PCA_results.scores'}; 
+parameters.loop_list.things_to_load.data.level = 'transformation';
+
+% Output
+parameters.loop_list.things_to_save.data_divided.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\'};
+parameters.loop_list.things_to_save.data_divided.filename= {'PCA_scores_dividedbymouse.mat'};
+parameters.loop_list.things_to_save.data_divided.variable= {'scores'}; 
+parameters.loop_list.things_to_save.data_divided.level = 'transformation';
+
+RunAnalysis({@DivideData}, parameters);
+
+%% Across mice-- Divide PC weights into behavior periods. 
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+    'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+    'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
+     };
+
+parameters.loop_variables.periods = periods_bothConditions.condition; 
+
+parameters.fromConcatenateData = true;
+parameters.divideDim = 1; 
+
+% Input 
+parameters.loop_list.things_to_load.division_points.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.division_points.filename= {'correlations_all_concatenated_origin.mat'};
+parameters.loop_list.things_to_load.division_points.variable= {'concatenation_origin'}; 
+parameters.loop_list.things_to_load.division_points.level = 'mouse';
+
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\PCA across mice\'};
+parameters.loop_list.things_to_load.data.filename= {'PCA_scores_dividedbymouse.mat'};
+parameters.loop_list.things_to_load.data.variable= {'scores{', 'mouse_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'transformation';
+
+% Output
+parameters.loop_list.things_to_save.data_divided.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\divided scores\',  'mouse', '\'};
+parameters.loop_list.things_to_save.data_divided.filename= {'PCA_scores_dividedbybehavior.mat'};
+parameters.loop_list.things_to_save.data_divided.variable= {'scores_bybehavior'}; 
+parameters.loop_list.things_to_save.data_divided.level = 'mouse';
+
+RunAnalysis({@DivideData}, parameters);
+
+%% Across mice-- Add empty behavior spaces back into the divided PCA scores. 
+
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+    'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+    'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
+     };
+
+parameters.evaluation_instructions = {['indices = find(cellfun(@isempty, parameters.timeseries));' ...
+      'data_evaluated = parameters.data;' ... 
+      'for i = 1:numel(indices);'...
+      'data_evaluated = [data_evaluated(1:indices(i)-1); {[]}; data_evaluated(indices(i):end)];' ... 
+      'end']};
+
+% Input 
+parameters.loop_list.things_to_load.timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\rolled timeseries\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.timeseries.filename= {'timeseries_rolled.mat'};
+parameters.loop_list.things_to_load.timeseries.variable= {'timeseries_rolled'}; 
+parameters.loop_list.things_to_load.timeseries.level = 'mouse';
+
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\divided scores\', 'mouse', '\'};
+parameters.loop_list.things_to_load.data.filename= {'PCA_scores_dividedbybehavior.mat'};
+parameters.loop_list.things_to_load.data.variable= {'scores_bybehavior'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output 
+parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\divided scores\', 'mouse', '\'};
+parameters.loop_list.things_to_save.data_evaluated.filename= {'PCA_scores_dividedbybehavior_withempties.mat'};
+parameters.loop_list.things_to_save.data_evaluated.variable= {'scores'}; 
+parameters.loop_list.things_to_save.data_evaluated.level = 'mouse';
+
+RunAnalysis({@EvaluateOnData}, parameters);
+
+%% Across mice-- Divide PC weights into roll windows by behavior periods.
+% Also permute to match correlation dimension structure.
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+               'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods'}, 'period_iterator';            
+               };
+
+parameters.loop_variables.periods = periods_bothConditions.condition; 
+
+parameters.evaluation_instructions = {['a = size(parameters.data,1);' ...
+      'parameters.instances = a ./ parameters.roll_number;'...
+      'data_evaluated = parameters.data;'
+       ]};
+
+parameters.toReshape = {'parameters.data'};
+parameters.reshapeDims = {'{parameters.roll_number, parameters.instances, []}'};
+
+% Permute data instructions/dimensions. To scores, rolls, instances. 
+parameters.DimOrder = [3, 1, 2]; 
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\divided scores\', 'mouse', '\' };
+parameters.loop_list.things_to_load.data.filename= {'PCA_scores_dividedbybehavior_withempties.mat'};
+parameters.loop_list.things_to_load.data.variable= {'scores{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+parameters.loop_list.things_to_load.roll_number.dir = {[parameters.dir_exper 'fluorescence analysis\rolled timeseries\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.roll_number.filename= {'roll_number.mat'};
+parameters.loop_list.things_to_load.roll_number.variable= {'roll_number{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_load.roll_number.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.data_permuted.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\', 'mouse', '\instances reshaped\'};
+parameters.loop_list.things_to_save.data_permuted.filename= {'values.mat'};
+parameters.loop_list.things_to_save.data_permuted.variable= {'values{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_save.data_permuted.level = 'mouse';
+
+parameters.loop_list.things_to_rename = {{'data_evaluated', 'data'}
+                                         {'data_reshaped', 'data'}}; 
+
+RunAnalysis({@EvaluateOnData, @ReshapeData, @PermuteData}, parameters);
