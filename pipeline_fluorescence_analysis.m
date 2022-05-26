@@ -160,13 +160,39 @@ parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
 
 RunAnalysis({@ConcatenateData}, parameters);
 
-%% Plot means of fluorescence by behavior per mouse, save figures.
-% Give the y limits to use
-parameters.ylim = [-100 150];
-plot_average_fluorescence_permouse(parameters);
+%% Take average of fluorescence by behavior 
 
-%% Take average of fluorescence by behavior across mice.
-average_fluorescence_across_mice(parameters);
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods.condition'}, 'period_iterator';
+                           
+               };
+
+% Load motorized behavior periods list, put into loop_variables 
+load([parameters.dir_exper 'periods_nametable.mat']);
+parameters.loop_variables.periods = periods; 
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\motorized\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.filename= {'concatenated_timeseries_all_periods.mat'};
+parameters.loop_list.things_to_load.data.variable= {'timeseries{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\motorized\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.average.filename= {'average_timeseries_all_periods.mat'};
+parameters.loop_list.things_to_save.average.variable= {'timeseries{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_save.average.level = 'mouse';
+
+
+RunAnalysis({@AverageData}, parameters);
 
 %% Plot average fluorescence across mice 
 % Give the y limits to use
