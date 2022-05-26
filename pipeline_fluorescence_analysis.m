@@ -480,13 +480,13 @@ parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), 
 parameters.concatDim = 2; 
 
 % Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
 parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
 parameters.loop_list.things_to_load.data.level = 'period';
 
 % Output
-parameters.loop_list.things_to_save.data_reshaped.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'mouse', '\instances reshaped\'};
+parameters.loop_list.things_to_save.data_reshaped.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances reshaped\'};
 parameters.loop_list.things_to_save.data_reshaped.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
 parameters.loop_list.things_to_save.data_reshaped.variable= {'correlations_reshaped'}; 
 parameters.loop_list.things_to_save.data_reshaped.level = 'period';
@@ -522,13 +522,13 @@ parameters.concatDim = 2;
 paramaters.concatenate_across_cells = false; 
 
 % Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
 parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
 parameters.loop_list.things_to_load.data.level = 'period';
 
 % Output
-parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
 parameters.loop_list.things_to_save.concatenated_data.filename= {'correlations_all_concatenated.mat'};
 parameters.loop_list.things_to_save.concatenated_data.variable= {'correlations_concatenated'}; 
 parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
@@ -657,13 +657,13 @@ parameters.observationDim = 2;
 parameters.numComponents = 100;
 
 % Input
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
 parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.results.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.results.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\'};
 parameters.loop_list.things_to_save.results.filename= {'PCA_results.mat'};
 parameters.loop_list.things_to_save.results.variable= {'PCA_results'}; 
 parameters.loop_list.things_to_save.results.level = 'mouse';
