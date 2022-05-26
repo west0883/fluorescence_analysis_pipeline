@@ -812,28 +812,30 @@ parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
 RunAnalysis({@ConcatenateData}, parameters); 
 
 %% MOTORIZED & SPONTANEOUS-- Run PCA ( not saving yet);
-
-[Zpca, U, mu, eigVecs] = PCA(correlations_concatenated',20);
-
-Zpca_reshaped = reshape(Zpca', 29,29, 20); 
-
-figure; for i = 1:20; subplot(4,5,i); imagesc(Zpca_reshaped(:,:,i)); caxis([-30 30]); colorbar; end;
-sgtitle('PCA motorized & spontaneous together');
+% 
+% [Zpca, U, mu, eigVecs] = PCA(correlations_concatenated',20);
+% 
+% Zpca_reshaped = reshape(Zpca', 29,29, 20); 
+% 
+% figure; for i = 1:20; subplot(4,5,i); imagesc(Zpca_reshaped(:,:,i)); caxis([-30 30]); colorbar; end;
+% sgtitle('PCA motorized & spontaneous together');
 
 %% a different function, which reports the variace explained
 
-[coeff,score,latent,tsquared,explained,mu] = pca(correlations_concatenated');
-pcs_reshaped = reshape(coeff,29, 29, 841);
-
-figure; for i = 1:20; subplot(4,5,i); imagesc(pcs_reshaped(:,:,i)); caxis([-0.05 0.05]); colorbar; end;
-%sgtitle('PCA motorized & spontaneous together');
-
-figure; plot(explained(1:100));
-
-figure; imagesc(score(:,1:20)');
-colorbar; caxis([-10 10]);
+% [coeff,score,latent,tsquared,explained,mu] = pca(correlations_concatenated');
+% pcs_reshaped = reshape(coeff,29, 29, 841);
+% 
+% figure; for i = 1:20; subplot(4,5,i); imagesc(pcs_reshaped(:,:,i)); caxis([-0.05 0.05]); colorbar; end;
+% %sgtitle('PCA motorized & spontaneous together');
+% 
+% figure; plot(explained(1:100));
+% 
+% figure; imagesc(score(:,1:20)');
+% colorbar; caxis([-10 10]);
 
 %% Run PCA with RunAnalysis
+% [[Maybe use "reshape" as a trick to get only the indices you want, first]]
+
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
@@ -841,9 +843,15 @@ end
 
 % Iterators
 parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'};
-
 parameters.loop_variables.mice_all = parameters.mice_all;
 
+% Reshape parameters.
+number_of_sources = 29; 
+parameters.indices = find(tril(ones(number_of_sources), -1));
+parameters.toReshape = {'parameters.data(parameters.indices, :)'};
+parameters.reshapeDims = {'{numel(parameters.indices),size(parameters.data,2)}'};
+
+% PCA parameters.
 parameters.observationDim = 2;
 parameters.numComponents = 100;
 
@@ -859,5 +867,7 @@ parameters.loop_list.things_to_save.results.filename= {'PCA_results.mat'};
 parameters.loop_list.things_to_save.results.variable= {'PCA_results'}; 
 parameters.loop_list.things_to_save.results.level = 'mouse';
 
-RunAnalysis({@PCA_forRunAnalysis}, parameters);
+parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'}}; 
+
+RunAnalysis({@ReshapeData, @PCA_forRunAnalysis}, parameters);
 
