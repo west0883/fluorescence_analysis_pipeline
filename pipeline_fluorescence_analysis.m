@@ -328,6 +328,45 @@ parameters.loop_list.things_to_save.std_dev.level = 'mouse';
 
 RunAnalysis({@AverageData}, parameters);
 
+%% Save reshaped data (2D + roll dim)
+% You end up using this more than once, so might as well save it.
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods.condition'}, 'period_iterator';            
+               };
+
+% Load motorized behavior periods list, put into loop_variables 
+load([parameters.dir_exper 'periods_nametable.mat']);
+parameters.loop_variables.periods = periods; 
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+
+% Dimensions for reshaping, before removing data & before cnocatenation.
+% Turning it into 2 dims + roll dim. 
+parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), size(parameters.data,3), size(parameters.data, 4) }'};
+
+% Concatenation dimension (post reshaping & removal)
+parameters.concatDim = 2; 
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\motorized\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
+parameters.loop_list.things_to_load.data.level = 'period';
+
+% Output
+parameters.loop_list.things_to_save.data_reshaped.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\motorized\'], 'mouse', '\instances reshaped\'};
+parameters.loop_list.things_to_save.data_reshaped.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
+parameters.loop_list.things_to_save.data_reshaped.variable= {'correlations_reshaped'}; 
+parameters.loop_list.things_to_save.data_reshaped.level = 'period';
+
+RunAnalysis({@ReshapeData}, parameters); 
+
 %% Put all correlation matrices into same concatenation (for PCA and other metrics)
 
 % Always clear loop list first. 
@@ -591,6 +630,45 @@ parameters.loop_list.things_to_save.std_dev.variable= {'std_dev'};
 parameters.loop_list.things_to_save.std_dev.level = 'period';
 
 RunAnalysis({@AverageData}, parameters);
+
+%% SPONTANEOUS -- Save reshaped data (2D + roll dimension)
+% You end up using this more than once, so might as well save it.
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods{:}'}, 'period_iterator';            
+               };
+
+% Load motorized behavior periods list, put into loop_variables 
+load([parameters.dir_exper 'periods_nametable.mat']);
+parameters.loop_variables.periods = periods_spontaneous; 
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+
+% Dimensions for reshaping, before removing data & before cnocatenation.
+% Turning it into 2 dims + roll dim. 
+parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), size(parameters.data,3), size(parameters.data, 4) }'};
+
+% Concatenation dimension (post reshaping & removal)
+parameters.concatDim = 2; 
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
+parameters.loop_list.things_to_load.data.level = 'period';
+
+% Output
+parameters.loop_list.things_to_save.data_reshaped.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\spontaneous\'], 'mouse', '\instances reshaped\'};
+parameters.loop_list.things_to_save.data_reshaped.filename= {'correlations_', 'period', '.mat'};
+parameters.loop_list.things_to_save.data_reshaped.variable= {'correlations_reshaped'}; 
+parameters.loop_list.things_to_save.data_reshaped.level = 'period';
+
+RunAnalysis({@ReshapeData}, parameters); 
 
 %% SPONTANEOUS -- Concatenate all correlations together (for PCA or other metrics)
 
