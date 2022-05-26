@@ -17,7 +17,7 @@ load([parameters.dir_exper '\mice_all.mat']);
 parameters.mice_all = mice_all;
 
 % ****Change here if there are specific mice, days, and/or stacks you want to work with**** 
-parameters.mice_all = parameters.mice_all([2 3 5]);
+%parameters.mice_all = parameters.mice_all([4:6]);
 %parameters.mice_all(1).days = parameters.mice_all(1).days(10:end);
 
 % Include stacks from a "spontaneous" field of mice_all?
@@ -910,6 +910,73 @@ parameters.loop_list.things_to_save.data_divided.variable= {'scores'};
 parameters.loop_list.things_to_save.data_divided.level = 'transformation';
 
 RunAnalysis({@DivideData}, parameters);
+
+%% Across mice -- Take overall average PC weights/scores/loadings within each mouse.
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+    'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+    'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
+     };
+
+parameters.averageDim = 1;
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\'};
+parameters.loop_list.things_to_load.data.filename= {'PCA_scores_dividedbymouse.mat'};
+parameters.loop_list.things_to_load.data.variable= {'scores{', 'mouse_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'transformation';
+
+% Output
+parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\'};
+parameters.loop_list.things_to_save.average.filename= {'PCA_scores_average_bymouse.mat'};
+parameters.loop_list.things_to_save.average.variable= {'average{', 'mouse_iterator', '}'}; 
+parameters.loop_list.things_to_save.average.level = 'transformation';
+
+parameters.loop_list.things_to_save.std_dev.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\'};
+parameters.loop_list.things_to_save.std_dev.filename= {'PCA_scores_std_dev_bymouse.mat'};
+parameters.loop_list.things_to_save.std_dev.variable= {'std_dev{', 'mouse_iterator', '}'}; 
+parameters.loop_list.things_to_save.std_dev.level = 'transformation';
+
+RunAnalysis({@AverageData}, parameters);
+
+%% Concatenate average scores of mice for plotting
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+    'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+    'average_type', {'loop_variables.average_type'}, 'average_type_iterator';
+    'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
+     };
+
+parameters.loop_variables.average_type = {'average', 'std_dev'};
+
+parameters.concatDim = 1;
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\'};
+parameters.loop_list.things_to_load.data.filename= {'PCA_scores_', 'average_type', '_bymouse.mat'};
+parameters.loop_list.things_to_load.data.variable= {'average_type', '{', 'mouse_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'average_type';
+
+% Output
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\'};
+parameters.loop_list.things_to_save.concatenated_data.filename= {'PCA_scores_', 'average_type', '_bymouse_concatenated.mat'};
+parameters.loop_list.things_to_save.concatenated_data.variable= {'average_type', '_concatenated'}; 
+parameters.loop_list.things_to_save.concatenated_data.level = 'average_type';
+
+RunAnalysis({@ConcatenateData}, parameters);
+
+%% Plot average scores of mice 
+
 
 %% Across mice-- Divide PC weights into behavior periods. 
 % Always clear loop list first. 
