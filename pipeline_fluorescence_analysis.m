@@ -18,7 +18,7 @@ parameters.mice_all = mice_all;
 
 % ****Change here if there are specific mice, days, and/or stacks you want to work with**** 
 parameters.mice_all = parameters.mice_all(1);
-parameters.mice_all(1).days = parameters.mice_all(1).days(10:end);
+%parameters.mice_all(1).days = parameters.mice_all(1).days(10:end);
 
 % Include stacks from a "spontaneous" field of mice_all?
 parameters.use_spontaneous_also = true;
@@ -27,6 +27,11 @@ parameters.use_spontaneous_also = true;
 parameters.digitNumber = 2;
 parameters.yDim = 256;
 parameters.xDim = 256;
+number_of_sources = 32; 
+
+% Make a conditions structure
+conditions= {'motorized'; 'spontaneous'};
+conditions_stack_locations = {'stacks'; 'spontaneous'};
 
 % Load names of motorized periods
 load([parameters.dir_exper 'periods_nametable.mat']);
@@ -37,7 +42,7 @@ periods_spontaneous = {'rest';'walk';'startwalk';'prewalk';'stopwalk';'postwalk'
 periods_bothConditions = [periods.condition; periods_spontaneous]; 
 
 % Make list of transformation types for iterating later.
-transformations = {'not transformed'; "Fisher transformed"};
+transformations = {'not transformed'; 'Fisher transformed'};
 
 %% Run fluorescence extraction. 
 
@@ -179,43 +184,8 @@ parameters.loop_list.things_to_save.segmented_timeseries.level = 'stack';
 
 RunAnalysis({@SegmentTimeseriesData}, parameters);
 
-%% Concatenate behavior period cell-format data across motorized & spontaneous
-% Is so you can use a single loop for calculations. Will be useful later if
-% you want to run lists of behavior comparisons and don't want to make different
-% calls when you have different combinations of motorized & spontaneous. 
-% Iterators
-
-% [Make sure there aren't any issues with concatenating cells with empty
-% entries.]
-
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
-               'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
-                   'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').spontaneous'}, 'stack_iterator';
-                   'condition', 
-                };
-
-parameters.loop_vairables.conditions = {'motorized'; 'spontaneous'};
-% Tell it to concatenate across cells, not within cells. 
-paramaters.concatenate_across_cells = true; 
-parameters.concatDim = 1;
-
-% Input Values
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\'], 'condition', '\', 'mouse', '\', 'day', '\'};
-parameters.loop_list.things_to_load.data.filename= {'segmented_timeseries_', 'stack', '.mat'};
-parameters.loop_list.things_to_load.data.variable= {'segmented_timeseries'}; 
-parameters.loop_list.things_to_load.data.level = 'stack';
-
-% Output values
-parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries both conditions\'], 'mouse', '\'};
-parameters.loop_list.things_to_save.concatenated_data.filename= {'concatenated_timeseries_all_periods.mat'};
-parameters.loop_list.things_to_save.concatenated_data.variable= {'timeseries'}; 
-parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
-
-RunAnalysis({@ConcatenateData}, parameters);
-%% [FROM HERE DOWN YOU CAN COMBINE MOTORIZED & SPONTANOUS SECTIONS]
-% Because they're concatenated.
-
 %% Concatenate fluorescence by behavior per mouse 
+
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
@@ -223,22 +193,19 @@ end
 
 % Iterators
 parameters.loop_list.iterators = {
+               'condition', {'loop_variables.conditions'}, 'condition_iterator';
                'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
-               'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').stacks'}, 'stack_iterator'             
+               'stack', {'getfield(loop_variables, {1}, "mice_all", {',  'mouse_iterator', '}, "days", {', 'day_iterator', '}, ', 'loop_variables.conditions_stack_locations{', 'condition_iterator', '})'}, 'stack_iterator'; 
                };
 
 parameters.loop_variables.mice_all = parameters.mice_all;
-
-% Load motorized behavior periods list, put into loop_variables &
-% parameters.
-% load([dir_exper 'periods.mat']);
-% parameters.loop_variables.periods = periods; 
-% parameters.periods = periods;
+parameters.loop_variables.conditions = conditions;
+parameters.loop_variables.conditions_stack_locations = conditions_stack_locations;
 
 % Dimension to concatenate the timeseries across.
 parameters.concatDim = 3; 
-paramaters.concatenate_across_cells = false; 
+parameters.concatenate_across_cells = false; 
 
 % Clear any reshaping instructions 
 if isfield(parameters, 'reshapeDims')
@@ -246,7 +213,7 @@ if isfield(parameters, 'reshapeDims')
 end
 
 % Input Values
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries both conditions\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\'],'condition', '\' 'mouse', '\', 'day', '\'};
 parameters.loop_list.things_to_load.data.filename= {'segmented_timeseries_', 'stack', '.mat'};
 parameters.loop_list.things_to_load.data.variable= {'segmented_timeseries'}; 
 parameters.loop_list.things_to_load.data.level = 'stack';
@@ -258,6 +225,43 @@ parameters.loop_list.things_to_save.concatenated_data.variable= {'timeseries'};
 parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
 
 RunAnalysis({@ConcatenateData}, parameters);
+
+%% Concatenate motorized & spontaneous together. 
+
+% Is so you can use a single loop for calculations. Will be useful later if
+% you want to run lists of behavior comparisons and don't want to make different
+% calls when you have different combinations of motorized & spontaneous. 
+% Iterators
+
+% [Make sure there aren't any issues with concatenating cells with empty
+% entries.]
+
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'condition', 'loop_variables.conditions', 'condition_iterator';
+                };
+
+parameters.loop_vairables.conditions = conditions;
+% Tell it to concatenate across cells, not within cells. 
+parameters.concatenate_across_cells = true; 
+parameters.concatDim = 1;
+
+% Input Values (use a trick to concatenate just the 2 conditions)
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\'], 'condition', '\', 'mouse', '\'};
+parameters.loop_list.things_to_load.data.filename= {'concatenated_timeseries_all_periods.mat'};
+parameters.loop_list.things_to_load.data.variable= {'timeseries'}; 
+parameters.loop_list.things_to_load.data.level = 'condition';
+
+% Output values
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries both conditions\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.concatenated_data.filename= {'concatenated_timeseries_all_periods.mat'};
+parameters.loop_list.things_to_save.concatenated_data.variable= {'timeseries_all'}; 
+parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
+
+RunAnalysis({@ConcatenateData}, parameters);
+
+
+%% [FROM HERE DOWN YOU CAN COMBINE MOTORIZED & SPONTANOUS SECTIONS]
+% Because they're concatenated.
 
 %% Take average of fluorescence by behavior 
 
@@ -279,18 +283,18 @@ parameters.loop_variables.mice_all = parameters.mice_all;
 parameters.averageDim = 3; 
 
 % Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries both conditions\'], 'mouse', '\'};
 parameters.loop_list.things_to_load.data.filename= {'concatenated_timeseries_all_periods.mat'};
-parameters.loop_list.things_to_load.data.variable= {'timeseries{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.variable= {'timeseries_all{', 'period_iterator', '}'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries both conditions\'], 'mouse', '\'};
 parameters.loop_list.things_to_save.average.filename= {'average_timeseries_all_periods_mean.mat'};
 parameters.loop_list.things_to_save.average.variable= {'average{', 'period_iterator', ',1}'}; 
 parameters.loop_list.things_to_save.average.level = 'mouse';
 
-parameters.loop_list.things_to_save.std_dev.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.std_dev.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries both conditions\'], 'mouse', '\'};
 parameters.loop_list.things_to_save.std_dev.filename= {'average_timeseries_all_periods_std.mat'};
 parameters.loop_list.things_to_save.std_dev.variable= {'std_dev{', 'period_iterator', ',1}'}; 
 parameters.loop_list.things_to_save.std_dev.level = 'mouse';
@@ -321,18 +325,18 @@ parameters.windowSize = 20;
 parameters.stepSize = 5; 
 
 % Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries both conditions\'], 'mouse', '\'};
 parameters.loop_list.things_to_load.data.filename= {'concatenated_timeseries_all_periods.mat'};
-parameters.loop_list.things_to_load.data.variable= {'timeseries{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.variable= {'timeseries_all{', 'period_iterator', '}'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.data_rolled.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.data_rolled.dir = {[parameters.dir_exper 'fluorescence analysis\rolled timeseries\'], 'mouse', '\'};
 parameters.loop_list.things_to_save.data_rolled.filename= {'timeseries_rolled.mat'};
 parameters.loop_list.things_to_save.data_rolled.variable= {'timeseries_rolled{', 'period_iterator', ',1}'}; 
 parameters.loop_list.things_to_save.data_rolled.level = 'mouse';
 
-parameters.loop_list.things_to_save.roll_number.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.roll_number.dir = {[parameters.dir_exper 'fluorescence analysis\rolled timeseries\'], 'mouse', '\'};
 parameters.loop_list.things_to_save.roll_number.filename= {'roll_number.mat'};
 parameters.loop_list.things_to_save.roll_number.variable= {'roll_number{', 'period_iterator', ', 1}'}; 
 parameters.loop_list.things_to_save.roll_number.level = 'mouse';
@@ -363,7 +367,7 @@ parameters.sourceDim = 2;
 parameters.timeDim = 1; 
 
 % Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\rolled timeseries\'], 'mouse', '\'};
 parameters.loop_list.things_to_load.data.filename= {'timeseries_rolled.mat'};
 parameters.loop_list.things_to_load.data.variable= {'timeseries_rolled{', 'period_iterator', ',1}'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
@@ -428,6 +432,7 @@ parameters.loop_list.iterators = {
 
 parameters.loop_variables.periods = periods_bothConditions; 
 parameters.loop_variables.mice_all = parameters.mice_all;
+parameters.loop_variables.transformations = transformations;
 
 % Dimension to average across
 parameters.averageDim = 3; 
@@ -519,7 +524,7 @@ parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), 
 
 % Concatenation dimension (post reshaping & removal)
 parameters.concatDim = 2; 
-paramaters.concatenate_across_cells = false; 
+parameters.concatenate_across_cells = false; 
 
 % Input 
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances\'};
@@ -542,15 +547,6 @@ parameters.loop_list.things_to_rename = { %{'data_removed', 'data'};
 % parameters.loop_list.things_to_hold = {{'data'}}; 
 
 RunAnalysis({@ReshapeData, @ConcatenateData}, parameters); 
-
-%%  Run PCA ( not saving yet);
-
-% [Zpca, U, mu, eigVecs] = PCA(correlations_concatenated',20);
-% 
-% Zpca_reshaped = reshape(Zpca', 29,29, 20); 
-% 
-% figure; for i = 1:20; subplot(4,5,i); imagesc(Zpca_reshaped(:,:,i)); caxis([-30 30]); colorbar; end;
-% sgtitle('PCA');
 
 %% Visualize difference in mean continued rest & walk for motorized & spontaneous
 mouse ='1087';
@@ -608,28 +604,6 @@ title('diff motor rest - spon rest');
 
 sgtitle(['mouse ' mouse]);
 
-%% MOTORIZED & SPONTANEOUS-- Run PCA ( not saving yet);
-% 
-% [Zpca, U, mu, eigVecs] = PCA(correlations_concatenated',20);
-% 
-% Zpca_reshaped = reshape(Zpca', 29,29, 20); 
-% 
-% figure; for i = 1:20; subplot(4,5,i); imagesc(Zpca_reshaped(:,:,i)); caxis([-30 30]); colorbar; end;
-% sgtitle('PCA motorized & spontaneous together');
-
-%% a different function, which reports the variace explained
-
-% [coeff,score,latent,tsquared,explained,mu] = pca(correlations_concatenated');
-% pcs_reshaped = reshape(coeff,29, 29, 841);
-% 
-% figure; for i = 1:20; subplot(4,5,i); imagesc(pcs_reshaped(:,:,i)); caxis([-0.05 0.05]); colorbar; end;
-% %sgtitle('PCA motorized & spontaneous together');
-% 
-% figure; plot(explained(1:100));
-% 
-% figure; imagesc(score(:,1:20)');
-% colorbar; caxis([-10 10]);
-
 
 %% (just across 1 mouse for now) Run PCA with RunAnalysis -- both motorized & spontaneus
 % DOES remove mean before PCA, as defualt of pca.m function.
@@ -644,10 +618,11 @@ end
 parameters.loop_list.iterators = {
     'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
     'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'};
+
 parameters.loop_variables.mice_all = parameters.mice_all;
+parameters.loop_variables.transformations = transformations;
 
 % Reshape parameters.
-number_of_sources = 29; 
 parameters.indices = find(tril(ones(number_of_sources), -1));
 parameters.toReshape = {'parameters.data(parameters.indices, :)'};
 parameters.reshapeDims = {'{numel(parameters.indices),size(parameters.data,2)}'};
@@ -657,13 +632,13 @@ parameters.observationDim = 2;
 parameters.numComponents = 100;
 
 % Input
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
 parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.results.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\'};
+parameters.loop_list.things_to_save.results.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
 parameters.loop_list.things_to_save.results.filename= {'PCA_results.mat'};
 parameters.loop_list.things_to_save.results.variable= {'PCA_results'}; 
 parameters.loop_list.things_to_save.results.level = 'mouse';
@@ -672,7 +647,31 @@ parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'}};
 
 RunAnalysis({@ReshapeData, @PCA_forRunAnalysis}, parameters);
 
-%% Concatenate acrosss mice, motorized & spontaneous (for PCA)
+%%  quickly plot some PCs
+mouse = '1087';
+components_to_plot = 20; 
+number_of_sources = 32;
+indices = find(tril(ones(number_of_sources), -1));
+for i = 1:numel(transformations)
+    transformation = transformations{i};
+    
+    load(['Y:\Sarah\Analysis\Experiments\Random Motorized Treadmill\fluorescence analysis\correlations\' transformation '\' mouse '\PCA individual mouse\PCA_results.mat']);
+   
+    figure;
+    for componenti = 1:components_to_plot
+        holder = NaN(number_of_sources, number_of_sources);
+        holder(indices) = PCA_results.components(:,componenti);
+        subplot(4,5,componenti); imagesc(holder); caxis([-0.1  0.1])
+        xticks([]); yticks([]);
+
+    end
+    sgtitle([mouse ', ' transformation]);
+
+    figure; imagesc(PCA_results.scores(:, 1:10)'); colorbar; caxis([-10 10]);
+    xticks([]); yticks([]);
+    sgtitle([mouse ', ' transformation]);
+end 
+%% Concatenate ACROSS MICE, motorized & spontaneous (for PCA)
 
 %% Run PCA across mice 
 
