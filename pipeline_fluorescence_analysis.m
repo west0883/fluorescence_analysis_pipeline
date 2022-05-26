@@ -774,3 +774,45 @@ subplot(2,5,5); imagesc(motor_rest_diff);  colorbar; colormap(gca, cmap_diffs); 
 title('diff motor rest - spon rest');
 
 sgtitle(['mouse ' mouse]);
+
+%% Concatenate all the motorized & spontaneous data together
+% (For a comprehensive PCA)
+parameters.loop_variables.conditions = {'motorized'; 'spontaneous'};
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
+               'condition', {'loop_variables.conditions{:}'}, 'condition_iterator'             
+                };
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+
+% Concatenation dimension
+parameters.concatDim = 2;
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'condition', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\both conditions concatenated\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.concatenated_data.filename= {'correlations_all_concatenated.mat'};
+parameters.loop_list.things_to_save.concatenated_data.variable= {'correlations_concatenated'}; 
+parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
+
+RunAnalysis({@ConcatenateData}, parameters); 
+
+%% MOTORIZED & SPONTANEOUS-- Run PCA ( not saving yet);
+
+[Zpca, U, mu, eigVecs] = PCA(correlations_concatenated',20);
+
+Zpca_reshaped = reshape(Zpca', 29,29, 20); 
+
+figure; for i = 1:20; subplot(4,5,i); imagesc(Zpca_reshaped(:,:,i)); caxis([-30 30]); colorbar; end;
+sgtitle('PCA motorized & spontaneous together');
