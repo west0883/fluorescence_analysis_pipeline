@@ -7,7 +7,7 @@ function [parameters] = PCA_forRunAnalysis(parameters)
     
     % If there's a "values" field from RunAnalysis, print updating message
     % for user.  
-    MessageToUser('PCA on', parameters)
+    MessageToUser('PCA on ', parameters)
 
     % Pull out data matrix (because you'll be potentially flipping it
     % around)
