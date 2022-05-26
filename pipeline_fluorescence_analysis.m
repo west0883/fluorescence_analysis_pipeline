@@ -44,14 +44,17 @@ periods_bothConditions = [periods.condition; periods_spontaneous];
 % Make list of transformation types for iterating later.
 transformations = {'not transformed'; 'Fisher transformed'};
 
+parameters.loop_variables.mice_all = parameters.mice_all;
+parameters.loop_variables.transformations = transformations;
+parameters.loop_variables.conditions = conditions;
+parameters.loop_variables.conditions_stack_locations = conditions_stack_locations;
+
 %% Run fluorescence extraction. 
 
 % Iterators
 parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
                'stack', {'[loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').stacks; loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').spontaneous]'}, 'stack_iterator'};
-
-parameters.loop_variables.mice_all = parameters.mice_all;
 
 % Dimension different sources are in
 parameters.sourcesDim = 3; 
@@ -101,8 +104,6 @@ end
 parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
                    'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').stacks'}, 'stack_iterator'};
-
-parameters.loop_variables.mice_all = parameters.mice_all;
 parameters.loop_variables.periods_nametable = periods; 
 
 % Skip any files that don't exist (spontaneous or problem files)
@@ -149,7 +150,6 @@ parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 
                    'stack', {'loop_variables.mice_all(',  'mouse_iterator', ').days(', 'day_iterator', ').spontaneous'}, 'stack_iterator';
                    'period', {'loop_variables.periods_spontaneous{:}'}, 'period_iterator'};
 
-parameters.loop_variables.mice_all = parameters.mice_all;
 parameters.loop_variables.periods_spontaneous = periods_spontaneous; 
 
 % Skip any files that don't exist (spontaneous or problem files)
@@ -199,10 +199,6 @@ parameters.loop_list.iterators = {
                'stack', {'getfield(loop_variables, {1}, "mice_all", {',  'mouse_iterator', '}, "days", {', 'day_iterator', '}, ', 'loop_variables.conditions_stack_locations{', 'condition_iterator', '})'}, 'stack_iterator'; 
                };
 
-parameters.loop_variables.mice_all = parameters.mice_all;
-parameters.loop_variables.conditions = conditions;
-parameters.loop_variables.conditions_stack_locations = conditions_stack_locations;
-
 % Dimension to concatenate the timeseries across.
 parameters.concatDim = 3; 
 parameters.concatenate_across_cells = false; 
@@ -240,7 +236,6 @@ parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 
                'condition', 'loop_variables.conditions', 'condition_iterator';
                 };
 
-parameters.loop_vairables.conditions = conditions;
 % Tell it to concatenate across cells, not within cells. 
 parameters.concatenate_across_cells = true; 
 parameters.concatDim = 1;
@@ -314,7 +309,6 @@ parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 
                };
 
 parameters.loop_variables.periods = periods_bothConditions; 
-parameters.loop_variables.mice_all = parameters.mice_all;
 
 % Dimension to roll across (time dimension). Will automatically add new
 % data to the last + 1 dimension. 
@@ -358,7 +352,6 @@ parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 
                };
 
 parameters.loop_variables.periods = periods_bothConditions; 
-parameters.loop_variables.mice_all = parameters.mice_all;
 
 % Dimension to correlate across (dimensions where different sources are). 
 parameters.sourceDim = 2; 
@@ -374,9 +367,9 @@ parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
 parameters.loop_list.things_to_save.correlation.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\not transformed\'], 'mouse', '\instances\'};
-parameters.loop_list.things_to_save.correlation.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
-parameters.loop_list.things_to_save.correlation.variable= {'correlations'}; 
-parameters.loop_list.things_to_save.correlation.level = 'period';
+parameters.loop_list.things_to_save.correlation.filename= {'correlations.mat'};
+parameters.loop_list.things_to_save.correlation.variable= {'correlations{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_save.correlation.level = 'mouse';
 
 RunAnalysis({@CorrelateTimeseriesData}, parameters);
 
@@ -395,19 +388,18 @@ parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 
                };
 
 parameters.loop_variables.periods = periods_bothConditions; 
-parameters.loop_variables.mice_all = parameters.mice_all;
 
 % Input
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\not transformed\'], 'mouse', '\instances\'};
-parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
-parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
-parameters.loop_list.things_to_load.data.level = 'period';
+parameters.loop_list.things_to_load.data.filename= {'correlations.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output 
 parameters.loop_list.things_to_save.data_transformed.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\Fisher transformed\'], 'mouse', '\instances\'};
-parameters.loop_list.things_to_save.data_transformed.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
-parameters.loop_list.things_to_save.data_transformed.variable= {'correlations'}; 
-parameters.loop_list.things_to_save.data_transformed.level = 'period';
+parameters.loop_list.things_to_save.data_transformed.filename= {'correlations.mat'};
+parameters.loop_list.things_to_save.data_transformed.variable= {'correlations{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_save.data_transformed.level = 'mouse';
 
 RunAnalysis({@FisherTransform}, parameters);
 
@@ -430,19 +422,14 @@ parameters.loop_list.iterators = {
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
 
-parameters.loop_variables.periods = periods_bothConditions; 
-parameters.loop_variables.mice_all = parameters.mice_all;
-parameters.loop_variables.transformations = transformations;
-
 % Dimension to average across
 parameters.averageDim = 3; 
 
-parameters.loop_variables.mice_all = parameters.mice_all;
 % Input 
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances\'};
-parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
-parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
-parameters.loop_list.things_to_load.data.level = 'period';
+parameters.loop_list.things_to_load.data.filename= {'correlations.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
 parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\average rolled\'};
@@ -460,6 +447,8 @@ RunAnalysis({@AverageData}, parameters);
 %% Save reshaped data (2D + roll dim)
 % You end up using this more than once, so might as well save it.
 % Always clear loop list first. 
+% Also permute so instances are in the last dimension.
+
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
 end
@@ -472,7 +461,6 @@ parameters.loop_list.iterators = {
                };
 
 parameters.loop_variables.periods = periods_bothConditions; 
-parameters.loop_variables.mice_all = parameters.mice_all;
 
 % Variable/data you want to reshape. 
 parameters.toReshape = {'parameters.data'}; 
@@ -481,22 +469,24 @@ parameters.toReshape = {'parameters.data'};
 % Turning it into 2 dims + roll dim. 
 parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), size(parameters.data,3), size(parameters.data, 4) }'};
 
-% Concatenation dimension (post reshaping & removal)
-parameters.concatDim = 2; 
+% Permute data instructions/dimensions. Puts instances in last dimension. 
 
+parameters.DimOrder = [1, 3, 2]; 
 % Input 
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances\'};
-parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
-parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
-parameters.loop_list.things_to_load.data.level = 'period';
+parameters.loop_list.things_to_load.data.filename= {'correlations.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.data_reshaped.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances reshaped\'};
-parameters.loop_list.things_to_save.data_reshaped.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
-parameters.loop_list.things_to_save.data_reshaped.variable= {'correlations_reshaped'}; 
-parameters.loop_list.things_to_save.data_reshaped.level = 'period';
+parameters.loop_list.things_to_save.data_permuted.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances reshaped\'};
+parameters.loop_list.things_to_save.data_permuted.filename= {'correlations.mat'};
+parameters.loop_list.things_to_save.data_permuted.variable= {'correlations_reshaped{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_save.data_permuted.level = 'mouse';
 
-RunAnalysis({@ReshapeData}, parameters); 
+parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'}}; 
+
+RunAnalysis({@ReshapeData, @PermuteData}, parameters); 
 
 %% Put all correlation matrices into same concatenation (for PCA and other metrics)
 % Always clear loop list first. 
@@ -512,11 +502,11 @@ parameters.loop_list.iterators = {
                };
 
 parameters.loop_variables.periods = periods_bothConditions; 
-parameters.loop_variables.mice_all = parameters.mice_all;
 
 % Dimensions for reshaping, before removing data & before cnocatenation.
 % Turning it into 2 dims. 
-parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), []}'};
+parameters.toReshape = {'parameters.data'};
+parameters.reshapeDims = {'{size(parameters.data, 1), []}'};
 
 % Removal instructions. Getting all sources in first instance that are NaN,
 % remove across all instances. 
@@ -527,16 +517,22 @@ parameters.concatDim = 2;
 parameters.concatenate_across_cells = false; 
 
 % Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances\'};
-parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
-parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
-parameters.loop_list.things_to_load.data.level = 'period';
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances reshaped\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations_reshaped{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
 parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
 parameters.loop_list.things_to_save.concatenated_data.filename= {'correlations_all_concatenated.mat'};
 parameters.loop_list.things_to_save.concatenated_data.variable= {'correlations_concatenated'}; 
 parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
+
+parameters.loop_list.things_to_save.concatenated_origin.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_save.concatenated_origin.filename= {'correlations_all_concatenated_origin.mat'};
+parameters.loop_list.things_to_save.concatenated_origin.variable= {'concatenation_origin'}; 
+parameters.loop_list.things_to_save.concatenated_origin.level = 'mouse';
+
 
 % Things to rename/reassign between the two functions (frist column renamed to
 % second column. Pairs for each level. Each row is a level.
@@ -546,7 +542,7 @@ parameters.loop_list.things_to_rename = { %{'data_removed', 'data'};
 % Things to hold example (didn't use here). Each row is a level.
 % parameters.loop_list.things_to_hold = {{'data'}}; 
 
-RunAnalysis({@ReshapeData, @ConcatenateData}, parameters); 
+RunAnalysis({@ReshapeData, @ConcatenateData}, parameters);  
 
 %% Visualize difference in mean continued rest & walk for motorized & spontaneous
 mouse ='1087';
@@ -618,9 +614,6 @@ parameters.loop_list.iterators = {
     'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
     'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'};
 
-parameters.loop_variables.mice_all = parameters.mice_all;
-parameters.loop_variables.transformations = transformations;
-
 % Reshape parameters.
 parameters.indices = find(tril(ones(number_of_sources), -1));
 parameters.toReshape = {'parameters.data(parameters.indices, :)'};
@@ -670,6 +663,164 @@ for i = 1:numel(transformations)
     xticks([]); yticks([]);
     sgtitle([mouse ', ' transformation]);
 end 
+
+%% Divide PC weights into behavior periods. (just within one mouse for now)
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+    'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+    'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
+     };
+
+parameters.loop_variables.periods = periods_bothConditions; 
+
+parameters.fromConcatenateData = true;
+parameters.divideDim = 1; 
+
+% Input 
+parameters.loop_list.things_to_load.division_points.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.division_points.filename= {'correlations_all_concatenated_origin.mat'};
+parameters.loop_list.things_to_load.division_points.variable= {'concatenation_origin'}; 
+parameters.loop_list.things_to_load.division_points.level = 'mouse';
+
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_load.data.filename= {'PCA_results.mat'};
+parameters.loop_list.things_to_load.data.variable= {'PCA_results.scores'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.data_divided.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_save.data_divided.filename= {'PCA_scores_dividedbybehavior.mat'};
+parameters.loop_list.things_to_save.data_divided.variable= {'scores'}; 
+parameters.loop_list.things_to_save.data_divided.level = 'mouse';
+
+RunAnalysis({@DivideData}, parameters);
+
+%% Add empty behavior spaces back into the divided PCA scores. 
+
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+    'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+    'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';
+     };
+
+parameters.evaluation_instructions = {['indices = find(cellfun(@isempty, parameters.timeseries));' ...
+      'data_evaluated = parameters.data;' ... 
+      'for i = 1:numel(indices);'...
+      'data_evaluated = [data_evaluated(1:indices(i)-1); {[]}; data_evaluated(indices(i):end)];' ... 
+      'end']};
+
+% Input 
+parameters.loop_list.things_to_load.timeseries.dir = {[parameters.dir_exper 'fluorescence analysis\rolled timeseries\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.timeseries.filename= {'timeseries_rolled.mat'};
+parameters.loop_list.things_to_load.timeseries.variable= {'timeseries_rolled'}; 
+parameters.loop_list.things_to_load.timeseries.level = 'mouse';
+
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_load.data.filename= {'PCA_scores_dividedbybehavior.mat'};
+parameters.loop_list.things_to_load.data.variable= {'scores'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output 
+parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_save.data_evaluated.filename= {'PCA_scores_dividedbybehavior_withempties.mat'};
+parameters.loop_list.things_to_save.data_evaluated.variable= {'scores'}; 
+parameters.loop_list.things_to_save.data_evaluated.level = 'mouse';
+
+RunAnalysis({@EvaluateOnData}, parameters);
+
+
+%% Divide PC weights into roll windows by behavior periods.
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+               'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods'}, 'period_iterator';            
+               };
+
+parameters.loop_variables.periods = periods_bothConditions; 
+
+parameters.evaluation_instructions = {['a = size(parameters.data,1);' ...
+      'parameters.instances = a ./ parameters.roll_number;'...
+      'data_evaluated = parameters.data;'
+       ]};
+
+parameters.toReshape = {'parameters.data'};
+parameters.reshapeDims = {'{parameters.roll_number, parameters.instances, 100}'};
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_load.data.filename= {'PCA_scores_dividedbybehavior_withempties.mat'};
+parameters.loop_list.things_to_load.data.variable= {'scores{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+parameters.loop_list.things_to_load.roll_number.dir = {[parameters.dir_exper 'fluorescence analysis\rolled timeseries\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.roll_number.filename= {'roll_number.mat'};
+parameters.loop_list.things_to_load.roll_number.variable= {'roll_number{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_load.roll_number.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.data_reshaped.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_save.data_reshaped.filename= {'PCA_scores_dividedbybehavior_withempties_withrolls.mat'};
+parameters.loop_list.things_to_save.data_reshaped.variable= {'scores_withrolls{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_save.data_reshaped.level = 'mouse';
+
+parameters.loop_list.things_to_rename = {{'data_evaluated', 'data'}}; 
+
+RunAnalysis({@EvaluateOnData, @ReshapeData}, parameters);
+
+%% Average PC scores by behavior (within mice)
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+               'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods'}, 'period_iterator';            
+               };
+
+parameters.loop_variables.periods = periods_bothConditions; 
+
+% 
+parameters.averageDim = 2;
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_load.data.filename= {'PCA_scores_dividedbybehavior_withempties_withrolls.mat'};
+parameters.loop_list.things_to_load.data.variable= {'scores_withrolls{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_save.average.filename= {'PCA_scores_dividedbybehavior_average.mat'};
+parameters.loop_list.things_to_save.average.variable= {'scores_average{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_save.average.level = 'mouse';
+
+parameters.loop_list.things_to_save.std_dev.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\PCA individual mouse\'};
+parameters.loop_list.things_to_save.std_dev.filename= {'PCA_scores_dividedbybehavior_std.mat'};
+parameters.loop_list.things_to_save.std_dev.variable= {'scores_std{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_save.std_dev.level = 'mouse';
+
+RunAnalysis({@AverageData}, parameters);
+
 %% Concatenate ACROSS MICE, motorized & spontaneous (for PCA)
 
 %% Run PCA across mice 
