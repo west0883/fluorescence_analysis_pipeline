@@ -506,6 +506,39 @@ RunAnalysis({@ReshapeData, @ConcatenateData}, parameters);
 % It's what Leonardi et all, 2013 do. 
 % Is only useful/meaningful on Fisher transformed, right? 
 
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+               'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';           
+               };
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.data_zscored.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_save.data_zscored.filename= {'correlations_all_concatenated_zscored.mat'};
+parameters.loop_list.things_to_save.data_zscored.variable= {'correlations_concatenated_zscored'}; 
+parameters.loop_list.things_to_save.data_zscored.level = 'mouse';
+
+parameters.loop_list.things_to_save.normal_values.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_save.normal_values.filename= {'correlations_all_concatenated_mu_and_std.mat'};
+parameters.loop_list.things_to_save.normal_values.variable= {'correlations_concatenated_mu_and_std'}; 
+parameters.loop_list.things_to_save.normal_values.level = 'mouse';
+
+RunAnalysis({@ZscoreData}, parameters);
+
+%% 
+%  [From here down, can run "normalization" iterator, just until you decide
+%  whether to normalize or not]
 %% (just across 1 mouse) Run PCA with RunAnalysis -- both motorized & spontaneous
 % Would be good to have PCs from individual mice to refer to-- to help
 % figure out if ICs seem to be labeled to similar nodes across mice.
