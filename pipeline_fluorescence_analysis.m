@@ -346,6 +346,9 @@ parameters.loop_variables.periods = periods;
 
 parameters.loop_variables.mice_all = parameters.mice_all;
 
+% Variable/data you want to reshape. 
+parameters.toReshape = {'parameters.data'}; 
+
 % Dimensions for reshaping, before removing data & before cnocatenation.
 % Turning it into 2 dims + roll dim. 
 parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), size(parameters.data,3), size(parameters.data, 4) }'};
