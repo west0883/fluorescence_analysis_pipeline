@@ -146,6 +146,11 @@ parameters.loop_variables.mice_all = parameters.mice_all;
 % Dimension to concatenate the timeseries across.
 parameters.concatDim = 3; 
 
+% Clear any reshaping instructions 
+if isfield(parameters, 'reshapeDims')
+    parameters = rmfield(parameters,'reshapeDims');
+end
+
 % Input Values
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\segmented timeseries\motorized\'], 'mouse', '\', 'day', '\'};
 parameters.loop_list.things_to_load.data.filename= {'segmented_timeseries_', 'stack', '.mat'};
@@ -277,9 +282,97 @@ parameters.loop_list.things_to_load.data.variable= {'timeseries_rolled{', 'perio
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.correlation.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\motorized\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.correlation.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\motorized\'], 'mouse', '\instances\'};
 parameters.loop_list.things_to_save.correlation.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
 parameters.loop_list.things_to_save.correlation.variable= {'correlations'}; 
 parameters.loop_list.things_to_save.correlation.level = 'period';
 
 RunAnalysis({@CorrelateTimeseriesData}, parameters);
+
+%% Average rolled correlations
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods.condition'}, 'period_iterator';            
+               };
+
+% Load motorized behavior periods list, put into loop_variables 
+load([parameters.dir_exper 'periods_nametable.mat']);
+parameters.loop_variables.periods = periods; 
+
+% Dimension to average across
+parameters.averageDim = 3; 
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\motorized\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
+parameters.loop_list.things_to_load.data.level = 'period';
+
+% Output
+parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\motorized\'], 'mouse', '\average rolled\'};
+parameters.loop_list.things_to_save.average.filename= {'correlations_rolled_average.mat'};
+parameters.loop_list.things_to_save.average.variable= {'average{', 'period_iterator', ',1}'}; 
+parameters.loop_list.things_to_save.average.level = 'mouse';
+
+parameters.loop_list.things_to_save.std_dev.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\motorized\'], 'mouse', '\average rolled\'};
+parameters.loop_list.things_to_save.std_dev.filename= {'correlations_rolled_std.mat'};
+parameters.loop_list.things_to_save.std_dev.variable= {'std_dev{', 'period_iterator', ',1}'}; 
+parameters.loop_list.things_to_save.std_dev.level = 'mouse';
+
+RunAnalysis({@AverageData}, parameters);
+
+%% Put all correlation matrices into same concatenation (for PCA and other metrics)
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods.condition'}, 'period_iterator';            
+               };
+
+% Load motorized behavior periods list, put into loop_variables 
+load([parameters.dir_exper 'periods_nametable.mat']);
+parameters.loop_variables.periods = periods; 
+
+parameters.loop_variables.mice_all = parameters.mice_all;
+
+% Dimensions for reshaping before cnocatenation
+parameters.reshapeDims = {'{size(parameters.data, 1), size(parameters.data,2), []}'};
+
+% Concatenation dimension (post reshaping)
+parameters.concatDim = 3; 
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\motorized\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_', 'period', '_', 'period_iterator', '.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations'}; 
+parameters.loop_list.things_to_load.data.level = 'period';
+
+% Output
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\motorized\'], 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_save.concatenated_data.filename= {'correlations_all_concatenated.mat'};
+parameters.loop_list.things_to_save.concatenated_data.variable= {'correlations_concatenated'}; 
+parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
+
+% Things to rename/reassign between the two functions (frist column renamed to
+% second column. Pairs for each level. Each row is a level.
+parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'}};
+
+% Things to hold example (didn't use here). Each row is a level.
+% parameters.loop_list.things_to_hold = {{'data'}}; 
+
+RunAnalysis({@ReshapeData, @ConcatenateData}, parameters); 
+
+%% 
+
+
