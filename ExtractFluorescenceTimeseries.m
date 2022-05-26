@@ -7,11 +7,7 @@
 function [parameters] = ExtractFluorescenceTimeseries(parameters)
 
      % Announce what extraction you're on.
-     message = ['Extracting '];
-     for dispi = 1:numel(parameters.values)/2
-        message = [message ', ' parameters.values{dispi}];
-     end
-     disp(message); 
+     MessageToUser('Extracting ', parameters);
 
      % If no masked sources yet, 
      if ~isfield(parameters, 'sources_masked')
