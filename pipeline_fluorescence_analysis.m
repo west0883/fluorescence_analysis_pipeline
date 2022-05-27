@@ -46,7 +46,7 @@ parameters.loop_variables.mice_all = parameters.mice_all;
 parameters.loop_variables.transformations = {'not transformed'; 'Fisher transformed'};
 parameters.loop_variables.conditions = {'motorized'; 'spontaneous'};
 parameters.loop_variables.conditions_stack_locations = {'motorized'; 'spontaneous'};
-parameters.loop_variables.normalizations = {'not normalized', 'normalized'};
+parameters.loop_variables.normalizations = {'not normalized'};       % ,  'normalized'}; % Decided not to use normalizaton
 
 %% Run fluorescence extraction. 
 % Always clear loop list first. 
@@ -533,6 +533,7 @@ RunAnalysis({@ZScoreData}, parameters);
 %% 
 %  [From here down, can run "normalization" iterator, just until you decide
 %  whether to normalize or not]
+% Decided not to use normalization, so only "not normalized" was used. 
 
 %% (just across 1 mouse) Run PCA with RunAnalysis -- both motorized & spontaneous
 % Would be good to have PCs from individual mice to refer to-- to help
@@ -948,7 +949,11 @@ close all;
 %% 
 % [Split PCA weights back to orginal mouse/behavior/roll/instance]
 
-%% Across mice-- Divide PC scores/loadings back to individual mice 
+% Decided not to use normalization. From here down for first 6 mice, used
+% just the calculations from pre- normalized/not normalized directories.
+
+%% Across mice-- Divide PC scores/loadings back to individual mice
+
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
