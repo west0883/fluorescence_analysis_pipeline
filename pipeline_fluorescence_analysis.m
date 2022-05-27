@@ -938,13 +938,13 @@ parameters.loop_list.things_to_load.components.level = 'transformation';
 
 % Output
 parameters.loop_list.things_to_save.fig.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\', 'normalization',  '\mean removed\'};
-parameters.loop_list.things_to_save.fig.filename= {['first_' num2str(parameters.components_to_plot(end)) '_PCs.fig']};
-parameters.loop_list.things_to_save.fig.variable= {'fig'}; 
+parameters.loop_list.things_to_save.fig.filename = {['first_' num2str(parameters.components_to_plot(end)) '_PCs.fig']};
+parameters.loop_list.things_to_save.fig.variable = {'fig'}; 
 parameters.loop_list.things_to_save.fig.level = 'transformation';
 
 RunAnalysis({@PlotPCs}, parameters);
 
-close all;
+%close all;
 
 %% 
 % [Split PCA weights back to orginal mouse/behavior/roll/instance]
