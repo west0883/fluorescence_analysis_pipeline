@@ -1073,10 +1073,13 @@ parameters.loop_list.things_to_load.data.level = 'average_type';
 
 % Output
 parameters.loop_list.things_to_save.fig.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\mean removed\'};
-parameters.loop_list.things_to_save.fig.filename= {'PCA_scores_', 'average_type', '_bymouse_concatenated.mat'};
+parameters.loop_list.things_to_save.fig.filename= {'PCA_scores_', 'average_type', '_bymouse_concatenated.fig'};
 parameters.loop_list.things_to_save.fig.variable= {'average_type', '_concatenated'}; 
 parameters.loop_list.things_to_save.fig.level = 'average_type';
 
+RunAnalysis({@PlotMouseAveragePCScores}, parameters);
+
+close all;
 
 %% Across mice-- Divide PC weights into behavior periods. 
 % Always clear loop list first. 
