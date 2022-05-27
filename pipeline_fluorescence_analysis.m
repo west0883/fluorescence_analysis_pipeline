@@ -499,37 +499,37 @@ RunAnalysis({@ReshapeData, @ConcatenateData}, parameters);
 %% Normalize each mouse's matrices. (across all time points and correlation pairs)
 % It's what Leonardi et all, 2013 do. 
 % Is only useful/meaningful on Fisher transformed, right? 
-
-% Always clear loop list first. 
-if isfield(parameters, 'loop_list')
-parameters = rmfield(parameters,'loop_list');
-end
-
-% Iterators
-parameters.loop_list.iterators = {
-               'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
-               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';           
-               };
-
-% Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\not normalized\'};
-parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
-parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated'}; 
-parameters.loop_list.things_to_load.data.level = 'mouse';
-
-% Output
-parameters.loop_list.things_to_save.data_zscored.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\normalized\'};
-parameters.loop_list.things_to_save.data_zscored.filename= {'correlations_all_concatenated.mat'};
-parameters.loop_list.things_to_save.data_zscored.variable= {'correlations_concatenated'}; 
-parameters.loop_list.things_to_save.data_zscored.level = 'mouse';
-
-parameters.loop_list.things_to_save.normal_values.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\normalized\'};
-parameters.loop_list.things_to_save.normal_values.filename= {'correlations_all_concatenated_mu_and_std.mat'};
-parameters.loop_list.things_to_save.normal_values.variable= {'correlations_concatenated_mu_and_std'}; 
-parameters.loop_list.things_to_save.normal_values.level = 'mouse';
-
-RunAnalysis({@ZScoreData}, parameters);
-
+% 
+% % Always clear loop list first. 
+% if isfield(parameters, 'loop_list')
+% parameters = rmfield(parameters,'loop_list');
+% end
+% 
+% % Iterators
+% parameters.loop_list.iterators = {
+%                'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+%                'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';           
+%                };
+% 
+% % Input 
+% parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\not normalized\'};
+% parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
+% parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated'}; 
+% parameters.loop_list.things_to_load.data.level = 'mouse';
+% 
+% % Output
+% parameters.loop_list.things_to_save.data_zscored.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\normalized\'};
+% parameters.loop_list.things_to_save.data_zscored.filename= {'correlations_all_concatenated.mat'};
+% parameters.loop_list.things_to_save.data_zscored.variable= {'correlations_concatenated'}; 
+% parameters.loop_list.things_to_save.data_zscored.level = 'mouse';
+% 
+% parameters.loop_list.things_to_save.normal_values.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\normalized\'};
+% parameters.loop_list.things_to_save.normal_values.filename= {'correlations_all_concatenated_mu_and_std.mat'};
+% parameters.loop_list.things_to_save.normal_values.variable= {'correlations_concatenated_mu_and_std'}; 
+% parameters.loop_list.things_to_save.normal_values.level = 'mouse';
+% 
+% RunAnalysis({@ZScoreData}, parameters);
+% 
 %% 
 %  [From here down, can run "normalization" iterator, just until you decide
 %  whether to normalize or not]
@@ -949,11 +949,9 @@ RunAnalysis({@PlotPCs}, parameters);
 %% 
 % [Split PCA weights back to orginal mouse/behavior/roll/instance]
 
-% Decided not to use normalization. From here down for first 6 mice, used
-% just the calculations from pre- normalized/not normalized directories.
+% Decided not to use normalization.
 
-%% Across mice-- Divide PC scores/loadings back to individual mice
-
+%% Across mice-- Divide PC scores/loadings back to individual mice 
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
@@ -1099,12 +1097,12 @@ parameters.fromConcatenateData = true;
 parameters.divideDim = 1; 
 
 % Input 
-parameters.loop_list.things_to_load.division_points.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.division_points.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\not normalized\'};
 parameters.loop_list.things_to_load.division_points.filename= {'correlations_all_concatenated_origin.mat'};
 parameters.loop_list.things_to_load.division_points.variable= {'concatenation_origin'}; 
 parameters.loop_list.things_to_load.division_points.level = 'mouse';
 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\PCA across mice\mean removed\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\mean removed\'};
 parameters.loop_list.things_to_load.data.filename= {'PCA_scores_dividedbymouse.mat'};
 parameters.loop_list.things_to_load.data.variable= {'scores{', 'mouse_iterator', '}'}; 
 parameters.loop_list.things_to_load.data.level = 'transformation';
