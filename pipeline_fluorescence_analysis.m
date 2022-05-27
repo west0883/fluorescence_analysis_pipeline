@@ -29,10 +29,6 @@ parameters.yDim = 256;
 parameters.xDim = 256;
 number_of_sources = 32; 
 
-% Make a conditions structure
-conditions= {'motorized'; 'spontaneous'};
-conditions_stack_locations = {'stacks'; 'spontaneous'};
-
 % Load names of motorized periods
 load([parameters.dir_exper 'periods_nametable.mat']);
 periods_motorized = periods;
@@ -45,14 +41,12 @@ clear periods;
 % Create a shared motorized & spontaneous list.
 periods_bothConditions = [periods_motorized; periods_spontaneous]; 
 
-% Make list of transformation types for iterating later.
-transformations = {'not transformed'; 'Fisher transformed'};
-
 parameters.loop_variables.data_type = {'correlations', 'PCA scores individual mouse'};
 parameters.loop_variables.mice_all = parameters.mice_all;
-parameters.loop_variables.transformations = transformations;
-parameters.loop_variables.conditions = conditions;
-parameters.loop_variables.conditions_stack_locations = conditions_stack_locations;
+parameters.loop_variables.transformations = {'not transformed'; 'Fisher transformed'};
+parameters.loop_variables.conditions = {'motorized'; 'spontaneous'};
+parameters.loop_variables.conditions_stack_locations = {'motorized'; 'spontaneous'};
+parameters.loop_variables.normalizations = {'not normalized', 'normalized'};
 
 %% Run fluorescence extraction. 
 % Always clear loop list first. 
