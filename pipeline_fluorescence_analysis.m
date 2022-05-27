@@ -475,12 +475,12 @@ parameters.loop_list.things_to_load.data.variable= {'values{', 'period_iterator'
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\not normalized\'};
 parameters.loop_list.things_to_save.concatenated_data.filename= {'correlations_all_concatenated.mat'};
 parameters.loop_list.things_to_save.concatenated_data.variable= {'correlations_concatenated'}; 
 parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';
 
-parameters.loop_list.things_to_save.concatenated_origin.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_save.concatenated_origin.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\not normalized\'};
 parameters.loop_list.things_to_save.concatenated_origin.filename= {'correlations_all_concatenated_origin.mat'};
 parameters.loop_list.things_to_save.concatenated_origin.variable= {'concatenation_origin'}; 
 parameters.loop_list.things_to_save.concatenated_origin.level = 'mouse';
@@ -512,27 +512,28 @@ parameters.loop_list.iterators = {
                };
 
 % Input 
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\not normalized\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
 parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.data_zscored.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
-parameters.loop_list.things_to_save.data_zscored.filename= {'correlations_all_concatenated_zscored.mat'};
-parameters.loop_list.things_to_save.data_zscored.variable= {'correlations_concatenated_zscored'}; 
+parameters.loop_list.things_to_save.data_zscored.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\normalized\'};
+parameters.loop_list.things_to_save.data_zscored.filename= {'correlations_all_concatenated.mat'};
+parameters.loop_list.things_to_save.data_zscored.variable= {'correlations_concatenated'}; 
 parameters.loop_list.things_to_save.data_zscored.level = 'mouse';
 
-parameters.loop_list.things_to_save.normal_values.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_save.normal_values.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\normalized\'};
 parameters.loop_list.things_to_save.normal_values.filename= {'correlations_all_concatenated_mu_and_std.mat'};
 parameters.loop_list.things_to_save.normal_values.variable= {'correlations_concatenated_mu_and_std'}; 
 parameters.loop_list.things_to_save.normal_values.level = 'mouse';
 
-RunAnalysis({@ZscoreData}, parameters);
+RunAnalysis({@ZScoreData}, parameters);
 
 %% 
 %  [From here down, can run "normalization" iterator, just until you decide
 %  whether to normalize or not]
+
 %% (just across 1 mouse) Run PCA with RunAnalysis -- both motorized & spontaneous
 % Would be good to have PCs from individual mice to refer to-- to help
 % figure out if ICs seem to be labeled to similar nodes across mice.
@@ -547,6 +548,7 @@ end
 % Iterators
 parameters.loop_list.iterators = {
     'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+    'normalization', {'loop_variables.normalizations'}, 'normalization_iterator';
     'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'};
 
 % PCA parameters.
@@ -558,13 +560,13 @@ parameters.variable_weighted_flag = false;
 parameters.algorithem = 'eig';
 
 % Input
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\', 'normalization', '\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
 parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.results.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse' '\'};
+parameters.loop_list.things_to_save.results.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'normalization', '\', 'mouse', '\'};
 parameters.loop_list.things_to_save.results.filename= {'PCA_results.mat'};
 parameters.loop_list.things_to_save.results.variable= {'PCA_results'}; 
 parameters.loop_list.things_to_save.results.level = 'mouse';
@@ -580,6 +582,7 @@ end
 % Iterators
 parameters.loop_list.iterators = {
     'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+    'normalization', {'loop_variables.normalizations'}, 'normalization_iterator';
     'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'};
 
 parameters.components_to_plot = 1:20; 
@@ -587,13 +590,13 @@ parameters.number_of_sources = 32;
 parameters.color_range = [-0.1 0.1];
 
 % Input 
-parameters.loop_list.things_to_load.components.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse' '\'};
+parameters.loop_list.things_to_load.components.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\','normalization', '\', 'mouse' '\'};
 parameters.loop_list.things_to_load.components.filename= {'PCA_results.mat'};
 parameters.loop_list.things_to_load.components.variable= {'PCA_results.components'}; 
 parameters.loop_list.things_to_load.components.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.fig.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'mouse' '\'};
+parameters.loop_list.things_to_save.fig.dir = {[parameters.dir_exper 'fluorescence analysis\PCA individual mouse\'],'transformation', '\', 'normalization', '\', 'mouse' '\'};
 parameters.loop_list.things_to_save.fig.filename= {['first_' num2str(parameters.components_to_plot(end)) '_PCs.fig']};
 parameters.loop_list.things_to_save.fig.variable= {'fig'}; 
 parameters.loop_list.things_to_save.fig.level = 'mouse';
@@ -735,18 +738,19 @@ end
 % Iterators
 parameters.loop_list.iterators = {
     'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+    'normalization', {'loop_variables.normalizations'}, 'normalization_iterator';
     'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'};
 
 parameters.averageDim = 2;
 
 % Input
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\', 'normalization', '\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
 parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.data_subtracted.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_save.data_subtracted.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\', 'normalization', '\'};
 parameters.loop_list.things_to_save.data_subtracted.filename= {'correlations_all_concatenated_mean_removed.mat'};
 parameters.loop_list.things_to_save.data_subtracted.variable= {'correlations_concatenated_mean_removed'}; 
 parameters.loop_list.things_to_save.data_subtracted.level = 'mouse';
@@ -844,6 +848,7 @@ end
 % Iterators
 parameters.loop_list.iterators = {
                'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+               'normalization', {'loop_variables.normalizations'}, 'normalization_iterator';
                'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator';           
                };
 % Concatenation dimension (post reshaping & removal)
@@ -851,18 +856,18 @@ parameters.concatDim = 2;
 parameters.concatenate_across_cells = false; 
 
 % Input
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'mouse', '\all concatenated\', 'normalization', '\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated_mean_removed.mat'};
 parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated_mean_removed'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output.
-parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\concatenated across mice\'};
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation','\', 'normalization', '\concatenated across mice\'};
 parameters.loop_list.things_to_save.concatenated_data.filename= {'correlations_all_concatenated_mean_removed.mat'};
 parameters.loop_list.things_to_save.concatenated_data.variable= {'correlations_concatenated_across_mice'}; 
 parameters.loop_list.things_to_save.concatenated_data.level = 'transformation';
 
-parameters.loop_list.things_to_save.concatenated_origin.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\concatenated across mice\'};
+parameters.loop_list.things_to_save.concatenated_origin.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'normalization',  '\concatenated across mice\'};
 parameters.loop_list.things_to_save.concatenated_origin.filename= {'correlations_all_concatenated_origin.mat'};
 parameters.loop_list.things_to_save.concatenated_origin.variable= {'concatenation_origin'}; 
 parameters.loop_list.things_to_save.concatenated_origin.level = 'transformation';
@@ -879,7 +884,8 @@ parameters = rmfield(parameters,'loop_list');
 end
 
 % Iterators
-parameters.loop_list.iterators = {'transformation', {'loop_variables.transformations'}, 'transformation_iterator'};
+parameters.loop_list.iterators = {'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+                                  'normalization', {'loop_variables.normalizations'}, 'normalization_iterator';};
 
 % PCA parameters.
 parameters.observationDim = 2;
@@ -890,7 +896,7 @@ parameters.variable_weighted_flag = false; % Weight certain correlation values b
 parameters.algorithem = 'eig';
 
 % Input
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\concatenated across mice\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'],'transformation', '\', 'normalization',  '\concatenated across mice\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated_mean_removed.mat'};
 parameters.loop_list.things_to_load.data.variable= {'correlations_concatenated_across_mice'}; 
 parameters.loop_list.things_to_load.data.level = 'transformation';
@@ -901,7 +907,7 @@ parameters.loop_list.things_to_load.observation_weights.variable= {'weights'};
 parameters.loop_list.things_to_load.observation_weights.level = 'transformation';
 
 % Output
-parameters.loop_list.things_to_save.results.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\mean removed\'};
+parameters.loop_list.things_to_save.results.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\', 'normalization', '\mean removed\'};
 parameters.loop_list.things_to_save.results.filename = {'PCA_results.mat'};
 parameters.loop_list.things_to_save.results.variable = {'PCA_results'}; 
 parameters.loop_list.things_to_save.results.level = 'transformation';
@@ -916,20 +922,21 @@ end
 
 % Iterators
 parameters.loop_list.iterators = {
-    'transformation', {'loop_variables.transformations'}, 'transformation_iterator'};
+    'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+    'normalization', {'loop_variables.normalizations'}, 'normalization_iterator'};
 
 parameters.components_to_plot = 1:20; 
 parameters.number_of_sources = 32;
 parameters.color_range = [-0.1 0.1];
 
 % Input 
-parameters.loop_list.things_to_load.components.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\mean removed\' };
+parameters.loop_list.things_to_load.components.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\', 'normalization', '\mean removed\' };
 parameters.loop_list.things_to_load.components.filename= {'PCA_results.mat'};
 parameters.loop_list.things_to_load.components.variable= {'PCA_results.components'}; 
 parameters.loop_list.things_to_load.components.level = 'transformation';
 
 % Output
-parameters.loop_list.things_to_save.fig.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\mean removed\'};
+parameters.loop_list.things_to_save.fig.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\', 'normalization',  '\mean removed\'};
 parameters.loop_list.things_to_save.fig.filename= {['first_' num2str(parameters.components_to_plot(end)) '_PCs.fig']};
 parameters.loop_list.things_to_save.fig.variable= {'fig'}; 
 parameters.loop_list.things_to_save.fig.level = 'transformation';
