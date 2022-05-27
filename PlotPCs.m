@@ -12,11 +12,11 @@ function [parameters] = PlotPCs(parameters)
 
     fig = figure;
     fig.WindowState = 'maximized';
-    for componenti = parameters.components_to_plot
+    for componenti = 1:numel(parameters.components_to_plot)
         holder = NaN(parameters.number_of_sources, parameters.number_of_sources);
-        holder(indices) = parameters.components(:,componenti);
+        holder(indices) = parameters.components(:, parameters.components_to_plot(componenti));
         subplot(subplot_rows, subplot_columns, componenti); imagesc(holder); caxis(parameters.color_range)
-        title(['PC ' num2str(componenti)]); axis square;
+        title(['PC ' num2str(parameters.components_to_plot(componenti))]); axis square;
     end
     sgtitle(strjoin(parameters.values(1:numel(parameters.values)/2), ', '))
 
