@@ -808,7 +808,7 @@ parameters.evaluation_instructions = {
                                        };
 
 % Input
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\not transformed\'], 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\not transformed\'], 'mouse', '\all concatenated\not normalized\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations_all_concatenated.mat'};
 parameters.loop_list.things_to_load.data.variable= {}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
@@ -848,7 +848,7 @@ parameters.loop_list.things_to_load.data.filename= {'number_correlations_bymouse
 parameters.loop_list.things_to_load.data.variable= {'numbers(', 'mouse_iterator', ')'}; 
 parameters.loop_list.things_to_load.data.level = 'transformation';
 
-parameters.loop_list.things_to_load.reps.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\not transformed\'], 'mouse', '\all concatenated\'};
+parameters.loop_list.things_to_load.reps.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\not transformed\'], 'mouse', '\all concatenated\not normalized\'};
 parameters.loop_list.things_to_load.reps.filename= {'correlations_all_concatenated.mat'};
 parameters.loop_list.things_to_load.reps.variable= {}; 
 parameters.loop_list.things_to_load.reps.level = 'mouse';
