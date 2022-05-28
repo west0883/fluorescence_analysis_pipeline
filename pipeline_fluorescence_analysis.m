@@ -1193,27 +1193,27 @@ parameters.loop_list.iterators = {
 
 parameters.loop_variables.periods = periods_bothConditions.condition; 
 
-parameters.evaluation_instructions = {['a = size(parameters.data,1);' ...
-      'parameters.instances = a ./ parameters.roll_number;'...
+parameters.evaluation_instructions = {{'a = size(parameters.data,1);' ...
+      'parameters.instances = a ./ parameters.roll_number{', 'period_iterator', '};'...
       'data_evaluated = parameters.data;'
-       ]};
+       }};
 
 parameters.toReshape = {'parameters.data'};
-parameters.reshapeDims = {'{parameters.roll_number, parameters.instances, []}'};
+parameters.reshapeDims = {'{parameters.roll_number{', 'period_iterator', '}, parameters.instances, []}'};
 
 % Permute data instructions/dimensions. To scores, rolls, instances. 
 parameters.DimOrder = [3, 1, 2]; 
+
+% Load & put in the "true" roll number there's supposed to be.
+load([parameters.dir_exper 'roll_number.mat'], 'roll_number'); 
+parameters.roll_number = roll_number;
+clear roll_number;
 
 % Input 
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\divided scores\', 'mouse', '\' };
 parameters.loop_list.things_to_load.data.filename= {'PCA_scores_dividedbybehavior_withempties.mat'};
 parameters.loop_list.things_to_load.data.variable= {'scores{', 'period_iterator', '}'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
-
-parameters.loop_list.things_to_load.roll_number.dir = {[parameters.dir_exper 'fluorescence analysis\rolled timeseries\'], 'mouse', '\'};
-parameters.loop_list.things_to_load.roll_number.filename= {'roll_number.mat'};
-parameters.loop_list.things_to_load.roll_number.variable= {'roll_number{', 'period_iterator', ', 1}'}; 
-parameters.loop_list.things_to_load.roll_number.level = 'mouse';
 
 % Output
 parameters.loop_list.things_to_save.data_permuted.dir = {[parameters.dir_exper 'fluorescence analysis\PCA across mice\'],'transformation', '\', 'mouse', '\instances reshaped\'};
