@@ -276,6 +276,23 @@ parameters.loop_list.things_to_save.std_dev.level = 'mouse';
 
 RunAnalysis({@AverageData}, parameters);
 
+%% Make a "true" roll number vector to refer to, based on periods tables. 
+% Window and step sizes (in frames)
+parameters.windowSize = 20;
+parameters.stepSize = 5; 
+parameters.duration = periods_bothConditions.duration; 
+
+windowSize = cell(size(parameters.duration));
+stepSize = cell(size(parameters.duration));
+windowSize(:) = {parameters.windowSize};
+stepSize(:) = {parameters.stepSize}; 
+
+roll_number = cellfun(@CountRolls, parameters.duration, windowSize, stepSize, 'UniformOutput',false);
+
+save([parameters.dir_exper 'roll_number.mat'], 'roll_number');
+
+clear windowSize stepSize roll_number;
+
 %% Roll data 
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
@@ -409,15 +426,22 @@ parameters.loop_variables.periods = periods_bothConditions.condition;
 % Lower triangle only.
 parameters.indices = find(tril(ones(number_of_sources), -1));
 
+% Load & put in the "true" roll number there's supposed to be.
+load([parameters.dir_exper 'roll_number.mat'], 'roll_number'); 
+parameters.roll_number = roll_number;
+clear roll_number;
+
 % Variable/data you want to reshape. 
 parameters.toReshape = {'parameters.data'}; 
 
 % Dimensions for reshaping, before removing data & before cnocatenation.
 % Turning it into 2 dims + roll dim. 
-parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), size(parameters.data,3), size(parameters.data, 4) }'};
+parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), [], parameters.roll_number{', 'period_iterator', '},}'};
 
 % Permute data instructions/dimensions. Puts instances in last dimension. 
 parameters.DimOrder = [1, 3, 2]; 
+
+% Load & put in roll number.
 
 % Evaluation instructions.
 parameters.evaluation_instructions = {{}, {},{'if ~isempty(parameters.data);'...
@@ -944,7 +968,7 @@ parameters.loop_list.things_to_save.fig.level = 'transformation';
 
 RunAnalysis({@PlotPCs}, parameters);
 
-%close all;
+close all;
 
 %% 
 % [Split PCA weights back to orginal mouse/behavior/roll/instance]
