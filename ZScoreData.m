@@ -7,7 +7,7 @@ function [parameters] = ZScoreData(parameters)
 
     MessageToUser('Zscoring ', parameters);
 
-    [parameters.data_zscored, mu, sigma] = zscore(parameters.data, 0, 'all');
+    [parameters.data_zscored, mu, sigma] = zscore(parameters.data, 0, parameters.zscoreDim);
 
     parameters.normal_values = [mu, sigma]; 
 
