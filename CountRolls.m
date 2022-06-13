@@ -17,7 +17,7 @@
 
 function [roll_number] = CountRolls(duration, windowSize, stepSize)
 
-    roll_number = (duration - windowSize)/stepSize;
+    roll_number = (duration - windowSize)/stepSize + 1;
 
     % If not an integer, round down to nearest integer (preserves any
     % existing integers)
