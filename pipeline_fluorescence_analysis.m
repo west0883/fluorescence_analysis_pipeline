@@ -402,6 +402,34 @@ parameters.loop_list.things_to_save.data_transformed.level = 'mouse';
 
 RunAnalysis({@FisherTransform}, parameters);
 
+%% Calculate contralateral-ipsalateral averages 
+% Calculate on the Fisher transformed
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods'}, 'period_iterator';            
+               };
+
+parameters.loop_variables.periods = periods_bothConditions.condition; 
+
+% Input
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\Fisher transformed\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.data_ipsacontra.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\Fisher transformed\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_save.data_ipsacontra.filename= {'correlations_IpsaContra.mat'};
+parameters.loop_list.things_to_save.data_ipsacontra.variable= {'correlations_{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_save.data_ipsacontra.level = 'mouse';
+
+RunAnalysis({@IpsaContraAverage}, parameters);
+
 %% 
 % From here on, can run everything with a "transform" iterator -- "not
 % transformed" or "Fisher transformed". (Because I want to see how the
@@ -470,6 +498,67 @@ parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'};
                                          {'data_permuted', 'data'}}; 
 
 RunAnalysis({@ReshapeData, @PermuteData, @EvaluateOnData}, parameters); 
+
+%% Reshape the ipsa-contra averaged data.
+
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+                'transformation', {'loop_variables.transformations'}, 'transformation_iterator';
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods'}, 'period_iterator';            
+               };
+
+parameters.loop_variables.periods = periods_bothConditions.condition; 
+
+% Lower triangle only.
+parameters.indices = find(tril(ones(number_of_sources), -1));
+
+% Load & put in the "true" roll number there's supposed to be.
+load([parameters.dir_exper 'roll_number.mat'], 'roll_number'); 
+parameters.roll_number = roll_number;
+clear roll_number;
+
+% Variable/data you want to reshape. 
+parameters.toReshape = {'parameters.data'}; 
+
+% Dimensions for reshaping, before removing data & before cnocatenation.
+% Turning it into 2 dims + roll dim. 
+parameters.reshapeDims = {'{size(parameters.data, 1) * size(parameters.data,2), [], parameters.roll_number{', 'period_iterator', '},}'};
+
+% Permute data instructions/dimensions. Puts instances in last dimension. 
+parameters.DimOrder = [1, 3, 2]; 
+
+% Load & put in roll number.
+
+% Evaluation instructions.
+parameters.evaluation_instructions = {{}, {},{'if ~isempty(parameters.data);'...
+          'data_evaluated = parameters.data(parameters.indices, :,:);' ...
+          'else;'...
+          'data_evaluated = [];'...
+          'end'
+           }};
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances\'};
+parameters.loop_list.things_to_load.data.filename= {'correlations_IpsaContra.mat'};
+parameters.loop_list.things_to_load.data.variable= {'correlations_{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances reshaped\'};
+parameters.loop_list.things_to_save.data_evaluated.filename= {'values_IpsaContra.mat'};
+parameters.loop_list.things_to_save.data_evaluated.variable= {'values{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_save.data_evaluated.level = 'mouse';
+
+parameters.loop_list.things_to_rename = {{'data_reshaped', 'data'};
+                                         {'data_permuted', 'data'}}; 
+
+RunAnalysis({@ReshapeData, @PermuteData, @EvaluateOnData}, parameters); 
+
 
 %% Put all correlation matrices into same concatenation (for PCA and other metrics)
 % Always clear loop list first. 
