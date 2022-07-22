@@ -16,13 +16,17 @@ function [parameters] = ExtractFluorescenceTimeseries(parameters)
 
      % Perform extraction
 
+     % Done by matrix multiplication of stack & mask weights (weighted) or 
+     % indices (not weighted), then divided by the sum of the mask (weights
+     % or indices, weighted vs not weighted, respectively).
+      
      % Weighted
      if isfield(parameters, 'weightedMean') && parameters.weightedMean
         parameters.timeseries = parameters.data'*parameters.sources ./sum(parameters.sources,1);
      
      % Not weighted.
      else
-         parameters.timeseries = parameters.data' * (parameters.sources > 0); 
+         parameters.timeseries = (parameters.data' * (parameters.sources > 0))./sum(parameters.sources, 1); 
      end
 
 end
