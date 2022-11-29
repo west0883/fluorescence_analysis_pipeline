@@ -73,8 +73,8 @@ parameters.weightedMean = true;
 parameters.loop_list.things_to_load.sources.dir = {[parameters.dir_exper 'spatial segmentation\500 SVD components\manual assignments\'], 'mouse', '\'};
 parameters.loop_list.things_to_load.sources.filename= {'sources_reordered_masked.mat'};
 parameters.loop_list.things_to_load.sources.variable= {'sources_masked'};
-
 parameters.loop_list.things_to_load.sources.level = 'mouse';
+
 % Preprocessed fluorescence data videos
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'preprocessing\fully preprocessed stacks\'], 'mouse', '\', 'day', '\'};
 parameters.loop_list.things_to_load.data.filename= {'data', 'stack', '.mat'};
@@ -403,27 +403,29 @@ parameters.loop_list.things_to_save.data_transformed.level = 'mouse';
 RunAnalysis({@FisherTransform}, parameters);
 
 %% Calculate contralateral-ipsalateral averages 
-% Calculate on the Fisher transformed
+% Calculate on the Fisher transformed & on not transformed
 % Always clear loop list first. 
 if isfield(parameters, 'loop_list')
 parameters = rmfield(parameters,'loop_list');
 end
 
 % Iterators
-parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+parameters.loop_list.iterators = {
+               'transformation', 'loop_variables.transformations(1)', 'transformation_iterator';
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
 
 parameters.loop_variables.periods = periods_bothConditions.condition; 
 
 % Input
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\Fisher transformed\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'], 'transformation', '\', 'mouse', '\instances\'};
 parameters.loop_list.things_to_load.data.filename= {'correlations.mat'};
 parameters.loop_list.things_to_load.data.variable= {'correlations{', 'period_iterator', '}'}; 
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
-parameters.loop_list.things_to_save.data_ipsacontra.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\Fisher transformed\'], 'mouse', '\instances\'};
+parameters.loop_list.things_to_save.data_ipsacontra.dir = {[parameters.dir_exper 'fluorescence analysis\correlations\'] 'transformation','\', 'mouse', '\instances\'};
 parameters.loop_list.things_to_save.data_ipsacontra.filename= {'correlations_IpsaContra.mat'};
 parameters.loop_list.things_to_save.data_ipsacontra.variable= {'correlations_{', 'period_iterator', '}'}; 
 parameters.loop_list.things_to_save.data_ipsacontra.level = 'mouse';
