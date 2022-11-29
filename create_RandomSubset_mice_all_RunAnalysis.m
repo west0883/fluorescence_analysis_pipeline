@@ -34,8 +34,8 @@ mice_all = mice_all;
 
 % Paramters for randomizing--Fields you want representation from, and amount of stacks you want (per
 % mouse) represented from each.
-fields = {'stacks', 10 ;
-          'spontaneous', 5};
+fields = {'stacks', 15 ;
+          'spontaneous', 8};
 
 % Number of digits you want in your stack number name
 digitNumber = 2; 
@@ -50,7 +50,7 @@ for mousei = 1:size(mice_all,2)
         random_mice_all(mousei).days(dayi).name = mice_all(mousei).days(dayi).name;
         for fieldi = 1:size(fields,1)
             field = fields{fieldi, 1};
-            random_mice_all(mousei).days(dayi).(field) = [];
+            random_mice_all(mousei).days(dayi).(field) = {};
         end
     end
 end
@@ -117,7 +117,7 @@ for fieldi = 1:size(fields,1)
             index = randsample(numel(stack_list),1);
             
             % Get the stack number as a string.
-            stack_number = ListStacks(stack_list(index), digitNumber);
+            stack_number = stack_list{index};
 
             % Check the existance and size of the stack-- get file name
             filename = CreateFileStrings(file_format_cell, mouse, day, stack_number, [], false);
