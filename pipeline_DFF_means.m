@@ -163,6 +163,9 @@ parameters.input_data_name={'0', 'stack number', '_MMStack_Pos0.ome.tif' };
 
 if rerun
 
+    % Output
+    parameters.dir_out_base = [parameters.dir_exper 'fully preprocessed stacks\'];
+
 
 end
 
