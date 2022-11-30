@@ -15,10 +15,11 @@ parameters.experiment_name='Random Motorized Treadmill';
 parameters.dir_base='Y:\Sarah\Analysis\Experiments\';
 parameters.dir_exper=[parameters.dir_base parameters.experiment_name '\']; 
 
-% Load mice_all, pass into parameters structure
-load([parameters.dir_exper '\mice_all.mat']);
-parameters.mice_all = mice_all;
-
+% Load mice_all_random, pass into parameters structure
+if isfile([parameters.dir_exper 'preprocessing\stack means\mice_all_random.mat'])
+    load([parameters.dir_exper '\preprocessing\stack means\mice_all_random.mat']);
+    parameters.mice_all = mice_all;
+end
 % ****Change here if there are specific mice, days, and/or stacks you want to work with**** 
 parameters.mice_all = parameters.mice_all;
 
@@ -152,20 +153,89 @@ rerun = true;
 % Only run once
 if ~isfile([parameters.dir_exper 'preprocessing\stack means\mice_all_random.mat'])
     create_RandomSubset_mice_all_RunAnalysis
+
+    load('Y:\Sarah\Analysis\Experiments\Random Motorized Treadmill\preprocessing\stack means\mice_all_random.mat');
+    parameters.mice_all = mice_all;
+    parameters.loop_variables.mice_all = parameters.mice_all;
+
 end
 
 %% Re-run preprocessing of stacks to re-find means before hemodynamic correction
 
-parameters.dir_dataset_name={'Y:\Sarah\Data\' parameters.experiment_name, '\', 'day', '\m', 'mouse number', '\stacks\0', 'stack number', '\'};
-parameters.dir_dataset_base = ['Y:\Sarah\Data\' parameters.experiment_name, '\'];
-%parameters.input_data_name={'.tif'};
-parameters.input_data_name={'0', 'stack number', '_MMStack_Pos0.ome.tif' }; 
 
 if rerun
 
-    % Output
-    parameters.dir_out_base = [parameters.dir_exper 'fully preprocessed stacks\'];
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
 
+% Iterators
+parameters.loop_list.iterators = {
+               'condition', {'loop_variables.conditions'}, 'condition_iterator';
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
+               'stack', {'getfield(loop_variables, {1}, "mice_all", {',  'mouse_iterator', '}, "days", {', 'day_iterator', '}, ', 'loop_variables.conditions_stack_locations{', 'condition_iterator', '})'}, 'stack_iterator'; 
+               };
+
+% Tell Preprocessing to save mean of data
+parameters.save_stack_mean = true; 
+
+% Input
+% stack im_list 
+parameters.loop_list.things_to_load.im_list.dir = {[parameters.dir_dataset_base] '\', 'day', '\m', 'mouse', '\stacks\0', 'stack', '\'};
+parameters.loop_list.things_to_load.im_list.filename = {'0', 'stack', 'MM_StackPos0.ome.tif'};
+parameters.loop_list.things_to_load.im_list.variable = {'stack_data'};
+parameters.loop_list.things_to_load.im_list.level = 'stack';
+parameters.things_to_load.im_list.load_function = @tiffreadAltered_SCA;
+parameters.things_to_load.im_list.load_function_additional_inputs = '[], "ReadUnknownTags",1';      
+
+% tforms across days
+parameters.loop_list.things_to_load.tform.dir = {[parameters.dir_exper '\preprocessing\tforms across days\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.tform.filename = {'tform.mat'};
+parameters.loop_list.things_to_load.tform.variable = {'tform'};
+parameters.loop_list.things_to_load.tform.level = 'day';
+
+% brain masks
+if parameters.mask_flag
+parameters.loop_list.things_to_load.indices_of_mask.dir = {[parameters.dir_exper '\preprocessing\masks\']};
+parameters.loop_list.things_to_load.indices_of_mask.filename = {'masks_m', 'mouse', '.mat'};
+parameters.loop_list.things_to_load.indices_of_mask.variable = {'indices_of_mask'};
+parameters.loop_list.things_to_load.indices_of_mask.level = 'mouse';
+end 
+
+% reference day per mouse 
+parameters.loop_list.things_to_load.reference_image.dir = {[parameters.dir_exper '\preprocessing\representative images\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.reference_image.filename = {'reference_image.mat'};
+parameters.loop_list.things_to_load.reference_image.variable = {'reference_image'};
+parameters.loop_list.things_to_load.reference_image.level = 'mouse';
+
+% representative image for day 
+parameters.loop_list.things_to_load.bRep.dir = {[parameters.dir_exper '\preprocessing\representative images\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.bRep.filename = {'bRep.mat'};
+parameters.loop_list.things_to_load.bRep.variable = {'bRep'};
+parameters.loop_list.things_to_load.bRep.level = 'day';
+
+% blood vessel masks
+if strcmp(parameters.correction_method, 'vessel regression')
+  % Establish filename of blood vessel mask.
+  filename_vessel_mask = [dir_exper 'blood vessel masks\bloodvessel_masks_m' mouse '.mat']; 
+
+    % Load blood vessel masks. 
+    load(filename_vessel_mask, 'vessel_masks'); 
+end
+
+% Output
+% stack means
+if isfield(parameters, 'save_stack_mean') && parameters.save_stack_mean
+parameters.loop_list.things_to_save.data_mean.dir = {[parameters.dir_exper '\preprocessing\fully preprocessed stacks\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_save.data_mean.filename = {'data_mean', 'stack', '.mat'};
+parameters.loop_list.things_to_save.data_mean.variable = {'data_mean'};
+parameters.loop_list.things_to_save.data_mean.level = 'stack';  
+end 
+
+% Run code.
+RunAnalysis({@Preprocessing}, parameters);
 
 end
 
