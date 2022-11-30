@@ -7,7 +7,6 @@
 % use as much resources for SVD compression on MSI.
 
 % Parameters for directories
-%clear all;
 
 experiment_name='Random Motorized Treadmill';
 dir_base='Y:\Sarah\Analysis\Experiments\';
