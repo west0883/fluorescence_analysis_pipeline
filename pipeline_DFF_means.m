@@ -11,6 +11,9 @@ clear all;
 % Create the experiment name.
 parameters.experiment_name='Random Motorized Treadmill';
 
+% Input directory name base
+parameters.dir_dataset_base = ['Y:\Sarah\Data\' parameters.experiment_name, '\'];
+
 % Output directory name bases
 parameters.dir_base='Y:\Sarah\Analysis\Experiments\';
 parameters.dir_exper=[parameters.dir_base parameters.experiment_name '\']; 
@@ -161,8 +164,7 @@ if ~isfile([parameters.dir_exper 'preprocessing\stack means\mice_all_random.mat'
 end
 
 %% Re-run preprocessing of stacks to re-find means before hemodynamic correction
-
-
+% ** need to repeat with file name MMStack_Default.ome.tif
 if rerun
 
 % Always clear loop list first. 
@@ -178,17 +180,18 @@ parameters.loop_list.iterators = {
                'stack', {'getfield(loop_variables, {1}, "mice_all", {',  'mouse_iterator', '}, "days", {', 'day_iterator', '}, ', 'loop_variables.conditions_stack_locations{', 'condition_iterator', '})'}, 'stack_iterator'; 
                };
 
+
 % Tell Preprocessing to save mean of data
 parameters.save_stack_mean = true; 
 
 % Input
 % stack im_list 
-parameters.loop_list.things_to_load.im_list.dir = {[parameters.dir_dataset_base] '\', 'day', '\m', 'mouse', '\stacks\0', 'stack', '\'};
-parameters.loop_list.things_to_load.im_list.filename = {'0', 'stack', 'MM_StackPos0.ome.tif'};
+parameters.loop_list.things_to_load.im_list.dir = {[parameters.dir_dataset_base], 'day', '\', 'mouse', '\stacks\0', 'stack', '\'};
+parameters.loop_list.things_to_load.im_list.filename = {'0', 'stack', '_MMStack_Pos0.ome.tif'};
 parameters.loop_list.things_to_load.im_list.variable = {'stack_data'};
 parameters.loop_list.things_to_load.im_list.level = 'stack';
-parameters.things_to_load.im_list.load_function = @tiffreadAltered_SCA;
-parameters.things_to_load.im_list.load_function_additional_inputs = '[], "ReadUnknownTags",1';      
+parameters.loop_list.things_to_load.im_list.load_function = @tiffreadAltered_SCA;
+parameters.loop_list.things_to_load.im_list.load_function_additional_inputs = '[], "ReadUnknownTags",1';      
 
 % tforms across days
 parameters.loop_list.things_to_load.tform.dir = {[parameters.dir_exper '\preprocessing\tforms across days\'], 'mouse', '\', 'day', '\'};
