@@ -166,6 +166,7 @@ end
 
 %% Re-run preprocessing of stacks to re-find means before hemodynamic correction
 % ** need to repeat with file name MMStack_Default.ome.tif
+% ** need to repeat with 'm1099' folder name for mouse 1099
 if rerun
 
 % Always clear loop list first. 
