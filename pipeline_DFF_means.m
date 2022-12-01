@@ -246,7 +246,37 @@ RunAnalysis({@Preprocessing}, parameters);
 
 end
 
-%% Take average of stacks within mice
+%% Concatenate mean stacks within mice
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
+               'stack', {'getfield(loop_variables, {1}, "mice_all", {',  'mouse_iterator', '}, "days", {', 'day_iterator', '}, ', 'loop_variables.conditions_stack_locations{', 'condition_iterator', '})'}, 'stack_iterator'; 
+               };
+
+parameters.concatenation_level = 'stack';
+parameters.concatDim = 3; 
+
+% Inputs
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.data.filename = {'data_mean', 'stack', '.mat'};
+parameters.loop_list.things_to_load.data.variable = {'data_mean'};
+parameters.loop_list.things_to_load.data.level = 'stack';  
+
+% Outputs
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.concatenated_data.filename = {'data_allmeans_permouse.mat'};
+parameters.loop_list.things_to_save.concatenated_data.variable = {'data_allmeans'};
+parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';  
+
+RunAnalysis({@ConcatenateData}, parameters);
+
+%% Average mean stacks within mice
 
 
 
