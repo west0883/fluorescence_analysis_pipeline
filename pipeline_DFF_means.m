@@ -232,6 +232,7 @@ if strcmp(parameters.correction_method, 'vessel regression')
 end
 
 % Output
+
 % stack means
 if isfield(parameters, 'save_stack_mean') && parameters.save_stack_mean
 parameters.loop_list.things_to_save.data_mean.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\', 'day', '\'};
