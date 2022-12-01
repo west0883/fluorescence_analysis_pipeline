@@ -186,6 +186,33 @@ parameters.loop_list.iterators = {
 parameters.save_stack_mean = true; 
 
 % Input
+
+% tforms across days
+parameters.loop_list.things_to_load.tform.dir = {[parameters.dir_exper 'preprocessing\tforms across days\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.tform.filename = {'tform.mat'};
+parameters.loop_list.things_to_load.tform.variable = {'tform'};
+parameters.loop_list.things_to_load.tform.level = 'day';
+
+% brain masks
+if parameters.mask_flag
+parameters.loop_list.things_to_load.indices_of_mask.dir = {[parameters.dir_exper 'preprocessing\masks\']};
+parameters.loop_list.things_to_load.indices_of_mask.filename = {'masks_m', 'mouse', '.mat'};
+parameters.loop_list.things_to_load.indices_of_mask.variable = {'indices_of_mask'};
+parameters.loop_list.things_to_load.indices_of_mask.level = 'mouse';
+end 
+
+% reference day per mouse 
+parameters.loop_list.things_to_load.reference_image.dir = {[parameters.dir_exper 'preprocessing\representative images\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.reference_image.filename = {'reference_image.mat'};
+parameters.loop_list.things_to_load.reference_image.variable = {'reference_image'};
+parameters.loop_list.things_to_load.reference_image.level = 'mouse';
+
+% representative image for day 
+parameters.loop_list.things_to_load.bRep.dir = {[parameters.dir_exper 'preprocessing\representative images\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.bRep.filename = {'bRep.mat'};
+parameters.loop_list.things_to_load.bRep.variable = {'bRep'};
+parameters.loop_list.things_to_load.bRep.level = 'day';
+
 % stack im_list 
 parameters.loop_list.things_to_load.im_list.dir = {[parameters.dir_dataset_base], 'day', '\', 'mouse', '\stacks\0', 'stack', '\'};
 parameters.loop_list.things_to_load.im_list.filename = {'0', 'stack', '_MMStack_Pos0.ome.tif'};
@@ -194,31 +221,6 @@ parameters.loop_list.things_to_load.im_list.level = 'stack';
 parameters.loop_list.things_to_load.im_list.load_function = @tiffreadAltered_SCA;
 parameters.loop_list.things_to_load.im_list.load_function_additional_inputs = {[], 'ReadUnknownTags', true};      
 
-% tforms across days
-parameters.loop_list.things_to_load.tform.dir = {[parameters.dir_exper '\preprocessing\tforms across days\'], 'mouse', '\', 'day', '\'};
-parameters.loop_list.things_to_load.tform.filename = {'tform.mat'};
-parameters.loop_list.things_to_load.tform.variable = {'tform'};
-parameters.loop_list.things_to_load.tform.level = 'day';
-
-% brain masks
-if parameters.mask_flag
-parameters.loop_list.things_to_load.indices_of_mask.dir = {[parameters.dir_exper '\preprocessing\masks\']};
-parameters.loop_list.things_to_load.indices_of_mask.filename = {'masks_m', 'mouse', '.mat'};
-parameters.loop_list.things_to_load.indices_of_mask.variable = {'indices_of_mask'};
-parameters.loop_list.things_to_load.indices_of_mask.level = 'mouse';
-end 
-
-% reference day per mouse 
-parameters.loop_list.things_to_load.reference_image.dir = {[parameters.dir_exper '\preprocessing\representative images\'], 'mouse', '\', 'day', '\'};
-parameters.loop_list.things_to_load.reference_image.filename = {'reference_image.mat'};
-parameters.loop_list.things_to_load.reference_image.variable = {'reference_image'};
-parameters.loop_list.things_to_load.reference_image.level = 'mouse';
-
-% representative image for day 
-parameters.loop_list.things_to_load.bRep.dir = {[parameters.dir_exper '\preprocessing\representative images\'], 'mouse', '\', 'day', '\'};
-parameters.loop_list.things_to_load.bRep.filename = {'bRep.mat'};
-parameters.loop_list.things_to_load.bRep.variable = {'bRep'};
-parameters.loop_list.things_to_load.bRep.level = 'day';
 
 % blood vessel masks
 if strcmp(parameters.correction_method, 'vessel regression')
@@ -232,7 +234,7 @@ end
 % Output
 % stack means
 if isfield(parameters, 'save_stack_mean') && parameters.save_stack_mean
-parameters.loop_list.things_to_save.data_mean.dir = {[parameters.dir_exper '\preprocessing\fully preprocessed stacks\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_save.data_mean.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\', 'day', '\'};
 parameters.loop_list.things_to_save.data_mean.filename = {'data_mean', 'stack', '.mat'};
 parameters.loop_list.things_to_save.data_mean.variable = {'data_mean'};
 parameters.loop_list.things_to_save.data_mean.level = 'stack';  
