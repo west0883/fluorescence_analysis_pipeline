@@ -371,3 +371,6 @@ parameters.loop_list.things_to_save.data_evaluated.variable = {'source_mean'};
 parameters.loop_list.things_to_save.data_evaluated.level = 'mouse';
 
 RunAnalysis({@EvaluateOnData}, parameters);
+
+%% 
+% ** will apply percent changes in figure creation pipeline**
