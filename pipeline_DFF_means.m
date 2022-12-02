@@ -24,8 +24,7 @@ if isfile([parameters.dir_exper 'preprocessing\stack means\mice_all_random.mat']
     parameters.mice_all = mice_all;
 end
 % ****Change here if there are specific mice, days, and/or stacks you want to work with**** 
-parameters.mice_all = parameters.mice_all(2:end);
-parameters.mice_all(1).days = parameters.mice_all(1).days(6:end);
+parameters.mice_all = parameters.mice_all;
 
 % Include stacks from a "spontaneous" field of mice_all?
 parameters.use_spontaneous_also = true;
@@ -43,8 +42,8 @@ parameters.indices = find(tril(ones(number_of_sources), -1));
 % Loop variables
 parameters.loop_variables.mice_all = parameters.mice_all;
 parameters.loop_variables.transformations = {'not transformed'; 'Fisher transformed'};
-parameters.loop_variables.conditions = {'motorized'; 'spontaneous'};
-parameters.loop_variables.conditions_stack_locations = {'stacks'; 'spontaneous'};
+parameters.loop_variables.conditions = {'motorized', 'spontaneous'}; 
+parameters.loop_variables.conditions_stack_locations = {'stacks', 'spontaneous'}; 
 
 % Preprocessing parameters.
 % Sampling frequency of collected data (per channel), in Hz or frames per
@@ -216,8 +215,8 @@ parameters.loop_list.things_to_load.bRep.variable = {'bRep'};
 parameters.loop_list.things_to_load.bRep.level = 'day';
 
 % stack im_list 
-parameters.loop_list.things_to_load.im_list.dir = {[parameters.dir_dataset_base], 'day', '\', 'mouse', '\stacks\0', 'stack', '\'};
-parameters.loop_list.things_to_load.im_list.filename = {'MMStack_Default.ome.tif'}; % {'0', 'stack', '_MMStack_Pos0.ome.tif'};
+parameters.loop_list.things_to_load.im_list.dir = {[parameters.dir_dataset_base], 'day', '\m', 'mouse', '\stacks\0', 'stack', '\'};
+parameters.loop_list.things_to_load.im_list.filename = {'0', 'stack', '_MMStack_Pos0.ome.tif'}; % {'MMStack_Default.ome.tif'};
 parameters.loop_list.things_to_load.im_list.variable = {'stack_data'};
 parameters.loop_list.things_to_load.im_list.level = 'stack';
 parameters.loop_list.things_to_load.im_list.load_function = @tiffreadAltered_SCA;
@@ -371,6 +370,37 @@ parameters.loop_list.things_to_save.data_evaluated.variable = {'source_mean'};
 parameters.loop_list.things_to_save.data_evaluated.level = 'mouse';
 
 RunAnalysis({@EvaluateOnData}, parameters);
+
+%% Concatenate & Average across mice 
+% (because this is how you apply the average sigmas after PLSR; it's
+% mathematically okay)
+
+% Iterators
+parameters.loop_list.iterators = {
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               };
+
+parameters.concatenation_level = 'mouse';
+parameters.concatDim = 3;
+parameters.averageDim = 3;
+
+% Input
+% mean fluorescence per IC per mouse, one per homologous IC
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.filename = {'IC_means_permouse_homologousTogether.mat'};
+parameters.loop_list.things_to_load.data.variable = {'source_mean'};
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output 
+% average across mice (after concatenating)
+parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper '\preprocessing\stack means\']};
+parameters.loop_list.things_to_save.average.filename = {'IC_means_acrossMice_homologousTogether.mat'};
+parameters.loop_list.things_to_save.average.variable = {'source_mean'};
+parameters.loop_list.things_to_save.average.level = 'end';
+
+parameters.loop_list.things_to_rename = {{'concatenated_data', 'data'}};
+
+RunAnalysis({@ConcatenateData, @AverageData}, parameters);
 
 %% 
 % ** will apply percent changes in figure creation pipeline**
