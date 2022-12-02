@@ -24,7 +24,8 @@ if isfile([parameters.dir_exper 'preprocessing\stack means\mice_all_random.mat']
     parameters.mice_all = mice_all;
 end
 % ****Change here if there are specific mice, days, and/or stacks you want to work with**** 
-parameters.mice_all = parameters.mice_all;
+parameters.mice_all = parameters.mice_all(2:end);
+parameters.mice_all(1).days = parameters.mice_all(1).days(3:end);
 
 % Include stacks from a "spontaneous" field of mice_all?
 parameters.use_spontaneous_also = true;
@@ -216,7 +217,7 @@ parameters.loop_list.things_to_load.bRep.level = 'day';
 
 % stack im_list 
 parameters.loop_list.things_to_load.im_list.dir = {[parameters.dir_dataset_base], 'day', '\', 'mouse', '\stacks\0', 'stack', '\'};
-parameters.loop_list.things_to_load.im_list.filename = {'0', 'stack', '_MMStack_Pos0.ome.tif'};
+parameters.loop_list.things_to_load.im_list.filename = {'MMStack_Default.ome.tif'}; % {'0', 'stack', '_MMStack_Pos0.ome.tif'};
 parameters.loop_list.things_to_load.im_list.variable = {'stack_data'};
 parameters.loop_list.things_to_load.im_list.level = 'stack';
 parameters.loop_list.things_to_load.im_list.load_function = @tiffreadAltered_SCA;
@@ -279,12 +280,43 @@ RunAnalysis({@ConcatenateData}, parameters);
 
 %% Average mean stacks within mice
 
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
 
+% Iterators
+parameters.loop_list.iterators = {
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               };
 
+parameters.averageDim = 3;
+
+% Inputs
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.filename = {'data_allmeans_permouse.mat'};
+parameters.loop_list.things_to_load.data.variable = {'data_allmeans'};
+parameters.loop_list.things_to_load.data.level = 'mouse';  
+
+% Outputs
+parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.average.filename = {'data_mean_permouse.mat'};
+parameters.loop_list.things_to_save.average.variable = {'data_mean'};
+parameters.loop_list.things_to_save.average.level = 'mouse';  
+
+RunAnalysis({@AverageData}, parameters);
 
 %% Find mean for each IC per mouse
 
-%RunAnalysis({@MeanPerSource}, parameters); 
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               };
 
 % Inputs
 % Source masks
@@ -294,7 +326,16 @@ parameters.loop_list.things_to_load.sources.variable= {'sources_masked'};
 parameters.loop_list.things_to_load.sources.level = 'mouse';
 
 % Mean images
-
+parameters.loop_list.things_to_load.mean_image.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.mean_image.filename = {'data_mean_permouse.mat'};
+parameters.loop_list.things_to_load.mean_image.variable = {'data_mean'};
+parameters.loop_list.things_to_load.mean_image.level = 'mouse';  
 
 % Ouputs
 % mean fluorescence per IC per mouse
+parameters.loop_list.things_to_save.source_mean.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.source_mean.filename = {'IC_means_permouse.mat'};
+parameters.loop_list.things_to_save.source_mean.variable = {'source_mean'};
+parameters.loop_list.things_to_save.source_mean.level = 'mouse';  
+
+RunAnalysis({@MeanPerSource}, parameters); 
