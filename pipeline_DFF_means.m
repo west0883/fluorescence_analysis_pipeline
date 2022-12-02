@@ -25,7 +25,7 @@ if isfile([parameters.dir_exper 'preprocessing\stack means\mice_all_random.mat']
 end
 % ****Change here if there are specific mice, days, and/or stacks you want to work with**** 
 parameters.mice_all = parameters.mice_all(2:end);
-parameters.mice_all(1).days = parameters.mice_all(1).days(3:end);
+parameters.mice_all(1).days = parameters.mice_all(1).days(6:end);
 
 % Include stacks from a "spontaneous" field of mice_all?
 parameters.use_spontaneous_also = true;
@@ -339,3 +339,35 @@ parameters.loop_list.things_to_save.source_mean.variable = {'source_mean'};
 parameters.loop_list.things_to_save.source_mean.level = 'mouse';  
 
 RunAnalysis({@MeanPerSource}, parameters); 
+
+%% Average across homologous ICs 
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {
+               'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               };
+parameters.evaluation_instructions = {{'data = reshape(parameters.data, 2, parameters.number_of_sources/2);' ...
+                                       'data2 = mean(data,1);'...
+                                       'data3 = repmat(data2, 1, 2);'
+                                       'data_evaluated = reshape(data3, parameters.number_of_sources, 1);'}};
+
+% Inputs
+% mean fluorescence per IC per mouse
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.filename = {'IC_means_permouse.mat'};
+parameters.loop_list.things_to_load.data.variable = {'source_mean'};
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output
+% mean fluorescence per IC per mouse, one per homologous IC
+parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.data_evaluated.filename = {'IC_means_permouse_homologousTogether.mat'};
+parameters.loop_list.things_to_save.data_evaluated.variable = {'source_mean'};
+parameters.loop_list.things_to_save.data_evaluated.level = 'mouse';
+
+RunAnalysis({@EvaluateOnData}, parameters);
