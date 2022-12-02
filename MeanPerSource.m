@@ -9,9 +9,6 @@
 
 function [parameters] = MeanPerSource(parameters)
 
-    sources = parameters.sources;
-    mean_image = parameters.mean_image;
-
-    parameters.source_mean = sources .* mean_image;
+    parameters.source_mean = parameters.sources .* parameters.mean_image;
 
 end 
