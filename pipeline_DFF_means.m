@@ -352,8 +352,8 @@ parameters.loop_list.iterators = {
                };
 parameters.evaluation_instructions = {{'data = reshape(parameters.data, 2, parameters.number_of_sources/2);' ...
                                        'data2 = mean(data,1);'...
-                                       'data3 = repmat(data2, 1, 2);'
-                                       'data_evaluated = reshape(data3, parameters.number_of_sources, 1);'}};
+                                       'data3 = repmat(data2, 2, 1);'...
+                                       'data_evaluated = transpose(reshape(data3, parameters.number_of_sources, 1));'}};
 
 % Inputs
 % mean fluorescence per IC per mouse
