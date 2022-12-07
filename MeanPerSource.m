@@ -11,6 +11,6 @@ function [parameters] = MeanPerSource(parameters)
 
     MessageToUser('Calculating mean per source for ', parameters); 
 
-    parameters.source_mean = parameters.sources .* parameters.mean_image;
-
+    parameters.source_mean =  (parameters.mean_image' * parameters.sources) ./ sum(parameters.sources, 1, 'omitnan');
+     
 end 
