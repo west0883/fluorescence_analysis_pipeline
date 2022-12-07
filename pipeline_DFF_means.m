@@ -149,7 +149,10 @@ parameters.usfac = 10;
 
 
 % Re-run processing of random stack subset?
-rerun = true;
+rerun = false;
+
+% Renumber?
+parameters.useRenumbering = true;
 
 %% Random selection of stacks
 
