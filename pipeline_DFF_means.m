@@ -42,8 +42,8 @@ parameters.indices = find(tril(ones(number_of_sources), -1));
 % Loop variables
 parameters.loop_variables.mice_all = parameters.mice_all;
 parameters.loop_variables.transformations = {'not transformed'; 'Fisher transformed'};
-parameters.loop_variables.conditions = {'motorized', 'spontaneous'}; 
-parameters.loop_variables.conditions_stack_locations = {'stacks', 'spontaneous'}; 
+parameters.loop_variables.conditions = {'spontaneous', 'motorized'};
+parameters.loop_variables.conditions_stack_locations = { 'spontaneous', 'stacks'};
 
 % Preprocessing parameters.
 % Sampling frequency of collected data (per channel), in Hz or frames per
