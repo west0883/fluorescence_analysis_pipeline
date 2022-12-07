@@ -410,5 +410,42 @@ parameters.loop_list.things_to_rename = {{'concatenated_data', 'data'}};
 
 RunAnalysis({@ConcatenateData, @AverageData}, parameters);
 
+%% Reorganize based on renumbering 
+% (different from "reording" of sources from IC pipeline)
+
+if parameters.useRenumbering
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end 
+
+% Iterators
+% (no iterations here)
+parameters.loop_list.iterators = 'none';
+               
+parameters.evaluation_instructions = {'data_evaluated = ArrangeNewNumbering(parameters.source_mean, parameters.node_renumbering, false, 2, 0);'};
+
+% Input
+parameters.loop_list.things_to_load.node_renumbering.dir = {parameters.dir_exper};
+parameters.loop_list.things_to_load.node_renumbering.filename= {'node_renumbering.mat'};
+parameters.loop_list.things_to_load.node_renumbering.variable= {'node_renumbering'}; 
+parameters.loop_list.things_to_load.node_renumbering.level = 'start';
+
+parameters.loop_list.things_to_load.source_mean.dir = {[parameters.dir_exper 'preprocessing\stack means\']};
+parameters.loop_list.things_to_load.source_mean.filename= {'IC_means_acrossMice_homologousTogether.mat'};
+parameters.loop_list.things_to_load.source_mean.variable= {'source_mean'}; 
+parameters.loop_list.things_to_load.source_mean.level = 'start';
+
+% Output 
+parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'preprocessing\stack means\']};
+parameters.loop_list.things_to_save.data_evaluated.filename = {'IC_means_acrossMice_homologousTogether_renumbered.mat'};
+parameters.loop_list.things_to_save.data_evaluated.variable = {'source_mean'};
+parameters.loop_list.things_to_save.data_evaluated.level = 'end';
+
+RunAnalysis({@EvaluateOnData}, parameters);
+
+end
+
 %% 
 % ** will apply percent changes in figure creation pipeline**
