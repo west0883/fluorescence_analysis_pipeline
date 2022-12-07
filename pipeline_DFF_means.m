@@ -215,7 +215,7 @@ parameters.loop_list.things_to_load.bRep.variable = {'bRep'};
 parameters.loop_list.things_to_load.bRep.level = 'day';
 
 % stack im_list 
-parameters.loop_list.things_to_load.im_list.dir = {[parameters.dir_dataset_base], 'day', '\m', 'mouse', '\stacks\0', 'stack', '\'};
+parameters.loop_list.things_to_load.im_list.dir = {[parameters.dir_dataset_base], 'day', '\', 'mouse', '\stacks\0', 'stack', '\'};
 parameters.loop_list.things_to_load.im_list.filename = {'0', 'stack', '_MMStack_Pos0.ome.tif'}; % {'MMStack_Default.ome.tif'};
 parameters.loop_list.things_to_load.im_list.variable = {'stack_data'};
 parameters.loop_list.things_to_load.im_list.level = 'stack';
@@ -257,20 +257,20 @@ end
 parameters.loop_list.iterators = {
                'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'day', {'loop_variables.mice_all(', 'mouse_iterator', ').days(:).name'}, 'day_iterator';
+               'condition', {'loop_variables.conditions'}, 'condition_iterator';
                'stack', {'getfield(loop_variables, {1}, "mice_all", {',  'mouse_iterator', '}, "days", {', 'day_iterator', '}, ', 'loop_variables.conditions_stack_locations{', 'condition_iterator', '})'}, 'stack_iterator'; 
                };
 
-parameters.concatenation_level = 'stack';
-parameters.concatDim = 3; 
+parameters.concatDim = 2; 
 
 % Inputs
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\', 'day', '\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'preprocessing\stack means\'], 'mouse', '\', 'day', '\'};
 parameters.loop_list.things_to_load.data.filename = {'data_mean', 'stack', '.mat'};
 parameters.loop_list.things_to_load.data.variable = {'data_mean'};
 parameters.loop_list.things_to_load.data.level = 'stack';  
 
 % Outputs
-parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.concatenated_data.dir = {[parameters.dir_exper 'preprocessing\stack means\'], 'mouse', '\'};
 parameters.loop_list.things_to_save.concatenated_data.filename = {'data_allmeans_permouse.mat'};
 parameters.loop_list.things_to_save.concatenated_data.variable = {'data_allmeans'};
 parameters.loop_list.things_to_save.concatenated_data.level = 'mouse';  
@@ -289,16 +289,16 @@ parameters.loop_list.iterators = {
                'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                };
 
-parameters.averageDim = 3;
+parameters.averageDim = 2;
 
 % Inputs
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'preprocessing\stack means\'], 'mouse', '\'};
 parameters.loop_list.things_to_load.data.filename = {'data_allmeans_permouse.mat'};
 parameters.loop_list.things_to_load.data.variable = {'data_allmeans'};
 parameters.loop_list.things_to_load.data.level = 'mouse';  
 
 % Outputs
-parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'preprocessing\stack means\'], 'mouse', '\'};
 parameters.loop_list.things_to_save.average.filename = {'data_mean_permouse.mat'};
 parameters.loop_list.things_to_save.average.variable = {'data_mean'};
 parameters.loop_list.things_to_save.average.level = 'mouse';  
@@ -325,14 +325,14 @@ parameters.loop_list.things_to_load.sources.variable= {'sources_masked'};
 parameters.loop_list.things_to_load.sources.level = 'mouse';
 
 % Mean images
-parameters.loop_list.things_to_load.mean_image.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.mean_image.dir = {[parameters.dir_exper 'preprocessing\stack means\'], 'mouse', '\'};
 parameters.loop_list.things_to_load.mean_image.filename = {'data_mean_permouse.mat'};
 parameters.loop_list.things_to_load.mean_image.variable = {'data_mean'};
 parameters.loop_list.things_to_load.mean_image.level = 'mouse';  
 
 % Ouputs
 % mean fluorescence per IC per mouse
-parameters.loop_list.things_to_save.source_mean.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.source_mean.dir = {[parameters.dir_exper 'preprocessing\stack means\'], 'mouse', '\'};
 parameters.loop_list.things_to_save.source_mean.filename = {'IC_means_permouse.mat'};
 parameters.loop_list.things_to_save.source_mean.variable = {'source_mean'};
 parameters.loop_list.things_to_save.source_mean.level = 'mouse';  
@@ -357,14 +357,14 @@ parameters.evaluation_instructions = {{'data = reshape(parameters.data, 2, param
 
 % Inputs
 % mean fluorescence per IC per mouse
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'preprocessing\stack means\'], 'mouse', '\'};
 parameters.loop_list.things_to_load.data.filename = {'IC_means_permouse.mat'};
 parameters.loop_list.things_to_load.data.variable = {'source_mean'};
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output
 % mean fluorescence per IC per mouse, one per homologous IC
-parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'preprocessing\stack means\'], 'mouse', '\'};
 parameters.loop_list.things_to_save.data_evaluated.filename = {'IC_means_permouse_homologousTogether.mat'};
 parameters.loop_list.things_to_save.data_evaluated.variable = {'source_mean'};
 parameters.loop_list.things_to_save.data_evaluated.level = 'mouse';
@@ -374,6 +374,11 @@ RunAnalysis({@EvaluateOnData}, parameters);
 %% Concatenate & Average across mice 
 % (because this is how you apply the average sigmas after PLSR; it's
 % mathematically okay)
+
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end 
 
 % Iterators
 parameters.loop_list.iterators = {
@@ -386,14 +391,14 @@ parameters.averageDim = 3;
 
 % Input
 % mean fluorescence per IC per mouse, one per homologous IC
-parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper '\preprocessing\stack means\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'preprocessing\stack means\'], 'mouse', '\'};
 parameters.loop_list.things_to_load.data.filename = {'IC_means_permouse_homologousTogether.mat'};
 parameters.loop_list.things_to_load.data.variable = {'source_mean'};
 parameters.loop_list.things_to_load.data.level = 'mouse';
 
 % Output 
 % average across mice (after concatenating)
-parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper '\preprocessing\stack means\']};
+parameters.loop_list.things_to_save.average.dir = {[parameters.dir_exper 'preprocessing\stack means\']};
 parameters.loop_list.things_to_save.average.filename = {'IC_means_acrossMice_homologousTogether.mat'};
 parameters.loop_list.things_to_save.average.variable = {'source_mean'};
 parameters.loop_list.things_to_save.average.level = 'end';
