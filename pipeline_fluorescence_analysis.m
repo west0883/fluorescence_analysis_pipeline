@@ -223,6 +223,7 @@ parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 
 % Tell it to concatenate across cells, not within cells. 
 parameters.concatenate_across_cells = true; 
 parameters.concatDim = 1;
+parameters.concatenation_level = 'condition';
 
 % Input Values (use a trick to concatenate just the 2 conditions)
 parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries\'], 'condition', '\', 'mouse', '\'};
