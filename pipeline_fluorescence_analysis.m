@@ -50,6 +50,7 @@ parameters.loop_variables.transformations = {'not transformed'; 'Fisher transfor
 parameters.loop_variables.conditions = {'motorized'; 'spontaneous'};
 parameters.loop_variables.conditions_stack_locations = {'stacks'; 'spontaneous'};
 parameters.loop_variables.normalizations = {'not normalized'};       % ,  'normalized'}; % Decided not to use normalizaton
+parameters.loop_variables.periods_bothConditions = periods_bothConditions.condition;
 
 %% Run fluorescence extraction. 
 % Always clear loop list first. 
@@ -337,6 +338,39 @@ parameters.loop_list.things_to_save.roll_number.level = 'mouse';
 
 RunAnalysis({@RollData}, parameters);
 
+%% Timeseries for fluorescence PLSR
+% Instead of rolling the timeseries, reshape so each time point is its own instance
+% (Is for fluorescence PLSR)
+
+% Put into same cell array, to match other formatting
+% Always clear loop list first. 
+if isfield(parameters, 'loop_list')
+parameters = rmfield(parameters,'loop_list');
+end
+
+% Iterators
+parameters.loop_list.iterators = {'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
+               'period', {'loop_variables.periods_bothConditions'}, 'period_iterator';            
+               };
+
+% permute so it's: time x instance x source 
+% one column, timepoints of each instance are together 
+parameters.evaluation_instructions = {{'holder = permute(parameters.data, [1 3 2]);' ...  
+                                       'data_evaluated = squeeze(reshape(holder, [], 1, parameters.number_of_sources));'}};
+
+% Input 
+parameters.loop_list.things_to_load.data.dir = {[parameters.dir_exper 'fluorescence analysis\concatenated timeseries both conditions\'], 'mouse', '\'};
+parameters.loop_list.things_to_load.data.filename= {'concatenated_timeseries_all_periods.mat'};
+parameters.loop_list.things_to_load.data.variable= {'timeseries_all{', 'period_iterator', '}'}; 
+parameters.loop_list.things_to_load.data.level = 'mouse';
+
+% Output
+parameters.loop_list.things_to_save.data_evaluated.dir = {[parameters.dir_exper 'fluorescence analysis\fluorescence for fluorescence PLSR\'], 'mouse', '\'};
+parameters.loop_list.things_to_save.data_evaluated.filename= {'forFluorescence.mat'};
+parameters.loop_list.things_to_save.data_evaluated.variable= {'forFluorescence{', 'period_iterator', ', 1}'}; 
+parameters.loop_list.things_to_save.data_evaluated.level = 'mouse';
+
+RunAnalysis({@EvaluateOnData}, parameters);
 %% Correlate data
 % Separating these into smaller files because correlating takes a long time
 % & I want the progress to be saved periodically.
@@ -412,7 +446,7 @@ end
 
 % Iterators
 parameters.loop_list.iterators = {
-               'transformation', 'loop_variables.transformations(1)', 'transformation_iterator';
+               'transformation', 'loop_variables.transformations', 'transformation_iterator';
                'mouse', {'loop_variables.mice_all(:).name'}, 'mouse_iterator'; 
                'period', {'loop_variables.periods'}, 'period_iterator';            
                };
@@ -437,6 +471,10 @@ RunAnalysis({@IpsaContraAverage}, parameters);
 % From here on, can run everything with a "transform" iterator -- "not
 % transformed" or "Fisher transformed". (Because I want to see how the
 % analyses look with & without transformation.)
+
+%% Average across mice
+
+
 
 %% Save reshaped data (2D + roll dim)
 % You end up using this more than once, so might as well save it.
